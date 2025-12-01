@@ -4,17 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Monitor Detector v2.0</title>
+    <title>Smart Monitor Detector v3.0 (Multi-Input)</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady()"
         type="text/javascript"></script>
 
     <style>
         :root {
-            --primary: #3b82f6;
-            --bg: #111827;
-            --card: #1f2937;
-            --text: #f3f4f6;
+            --primary: #8b5cf6;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --text: #f1f5f9;
+            --btn-hover: #7c3aed;
         }
 
         body {
@@ -30,7 +31,7 @@
         }
 
         h1 {
-            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            background: linear-gradient(to right, #a78bfa, #f472b6);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-bottom: 5px;
@@ -47,31 +48,53 @@
 
         .card {
             background: var(--card);
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
             position: relative;
+            overflow: hidden;
+        }
+
+        /* Media Display Area */
+        .media-wrapper {
+            position: relative;
+            min-height: 300px;
+            background: #000;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
 
         video,
-        canvas {
-            width: 100%;
-            height: auto;
+        canvas,
+        img {
+            max-width: 100%;
+            max-height: 60vh;
             border-radius: 8px;
-            background: #000;
             display: block;
+            object-fit: contain;
         }
 
+        .placeholder-text {
+            color: #64748b;
+            font-size: 0.9rem;
+            position: absolute;
+        }
+
+        /* Controls */
         .controls {
             display: flex;
             gap: 10px;
             justify-content: center;
-            margin-top: 15px;
+            margin-top: 20px;
             flex-wrap: wrap;
         }
 
-        button {
-            padding: 12px 24px;
+        button,
+        .file-upload-label {
+            padding: 12px 20px;
             border-radius: 8px;
             border: none;
             font-weight: 600;
@@ -79,48 +102,67 @@
             background: var(--primary);
             color: white;
             transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
         }
 
         button:disabled {
-            background: #374151;
+            background: #334155;
             cursor: not-allowed;
+            filter: grayscale(1);
         }
 
-        button:hover:not(:disabled) {
+        button:hover:not(:disabled),
+        .file-upload-label:hover {
+            background: var(--btn-hover);
             transform: translateY(-2px);
-            filter: brightness(1.1);
         }
 
         .btn-reset {
             background: #ef4444;
         }
 
+        .btn-reset:hover {
+            background: #dc2626;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Stats */
         .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 15px;
             margin-top: 10px;
         }
 
         .stat-box {
-            background: #374151;
-            padding: 10px;
-            border-radius: 8px;
+            background: #334155;
+            padding: 15px;
+            border-radius: 10px;
             text-align: center;
+            border: 1px solid #475569;
         }
 
         .stat-val {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: 700;
             display: block;
+            margin-bottom: 5px;
         }
 
         .c-green {
             color: #4ade80;
+            text-shadow: 0 0 10px rgba(74, 222, 128, 0.3);
         }
 
         .c-red {
             color: #f87171;
+            text-shadow: 0 0 10px rgba(248, 113, 113, 0.3);
         }
 
         .hidden {
@@ -128,17 +170,16 @@
         }
 
         .loader {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid var(--primary);
+            width: 18px;
+            height: 18px;
+            border: 2px solid #fff;
+            border-bottom-color: transparent;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
             display: inline-block;
-            vertical-align: middle;
+            animation: rotation 1s linear infinite;
         }
 
-        @keyframes spin {
+        @keyframes rotation {
             0% {
                 transform: rotate(0deg);
             }
@@ -147,43 +188,46 @@
                 transform: rotate(360deg);
             }
         }
-
-        /* Debug toggle */
-        .debug-options {
-            margin-top: 10px;
-            text-align: center;
-            font-size: 0.8rem;
-            color: #9ca3af;
-        }
     </style>
 </head>
 
 <body>
 
-    <h1>Monitor Detector v2.0</h1>
-    <div style="margin-bottom: 20px; font-size: 0.9rem;">
-        <span id="statusParams">Memuat AI Library... <div class="loader"></div></span>
-    </div>
+    <h1>Smart Monitor Detector v3.0</h1>
+    <p id="statusParams" style="color: #94a3b8; font-size: 0.9rem; margin-top:0;">Memuat Engine AI... <span
+            class="loader"></span></p>
 
     <div class="container">
         <div class="card">
-            <video id="videoInput" playsinline autoplay></video>
-            <canvas id="canvasOutput" class="hidden"></canvas>
-
-            <div class="controls">
-                <button id="startBtn" onclick="startCamera()">📷 Buka Kamera</button>
-                <button id="processBtn" onclick="processImage()" disabled>✨ Analisa Monitor</button>
-                <button id="resetBtn" onclick="reset()" class="hidden btn-reset">🔄 Reset</button>
+            <!-- Area Tampilan Gambar/Video -->
+            <div class="media-wrapper">
+                <span id="placeholder" class="placeholder-text">Belum ada gambar/video</span>
+                <video id="videoInput" playsinline autoplay class="hidden"></video>
+                <img id="imageInput" class="hidden" alt="Uploaded Image">
+                <canvas id="canvasOutput" class="hidden"></canvas>
             </div>
 
-            <!-- Debug Options (Optional visibility) -->
-            <div class="debug-options">
-                Tips: Pastikan seluruh bingkai monitor terlihat dalam kamera.
+            <!-- Tombol Kontrol -->
+            <div class="controls">
+                <!-- Input Kamera -->
+                <button id="camBtn" onclick="startCamera()">📷 Live Kamera</button>
+
+                <!-- Input File -->
+                <label for="fileInput" class="file-upload-label">
+                    📁 Upload Foto
+                </label>
+                <input type="file" id="fileInput" accept="image/*" onchange="handleFileUpload(event)">
+
+                <!-- Action -->
+                <button id="processBtn" onclick="processFrame()" disabled>✨ Deteksi & Hitung</button>
+                <button id="resetBtn" onclick="resetApp()" class="hidden btn-reset">🔄 Reset</button>
             </div>
         </div>
 
+        <!-- Panel Hasil -->
         <div id="resultPanel" class="card hidden">
-            <h3 style="margin-top:0; text-align:center;">Hasil Deteksi</h3>
+            <h3 style="margin:0 0 15px 0; text-align:center; border-bottom:1px solid #334155; padding-bottom:10px;">
+                Hasil Analisis</h3>
             <div class="stats-grid">
                 <div class="stat-box">
                     <span class="stat-val c-green" id="cntOn">0</span>
@@ -194,63 +238,97 @@
                     Monitor MATI
                 </div>
             </div>
+            <p style="text-align:center; font-size:0.8rem; color:#64748b; margin-top:15px;">
+                Algoritma: Adaptive Contour + HSV Brightness Check
+            </p>
         </div>
     </div>
 
     <script>
         let video = document.getElementById('videoInput');
+        let imgInput = document.getElementById('imageInput');
         let canvas = document.getElementById('canvasOutput');
         let ctx = canvas.getContext('2d');
         let stream = null;
         let cvReady = false;
+        let inputType = 'none'; // 'camera' or 'image'
 
         function onOpenCvReady() {
             cvReady = true;
-            document.getElementById('statusParams').innerHTML = "✅ Sistem Siap. Silakan buka kamera.";
+            document.getElementById('statusParams').innerText = "✅ Engine Siap. Pilih sumber gambar.";
             document.getElementById('statusParams').style.color = "#4ade80";
         }
 
+        // --- 1. HANDLE CAMERA ---
         async function startCamera() {
+            resetApp();
             try {
-                // Mencoba mengambil kamera belakang (environment) dengan resolusi HD
                 stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: 'environment',
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
-                    }
+                    video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
                 });
                 video.srcObject = stream;
                 video.classList.remove('hidden');
-                canvas.classList.add('hidden');
-                document.getElementById('resultPanel').classList.add('hidden');
+                document.getElementById('placeholder').classList.add('hidden');
+                inputType = 'camera';
 
                 video.onloadedmetadata = () => {
-                    document.getElementById('startBtn').classList.add('hidden');
                     document.getElementById('processBtn').disabled = false;
+                    disableInputs(true);
                 };
             } catch (err) {
-                alert("Error akses kamera: " + err);
+                alert("Gagal akses kamera: " + err);
             }
         }
 
-        function processImage() {
+        // --- 2. HANDLE FILE UPLOAD ---
+        function handleFileUpload(e) {
+            if (e.target.files.length === 0) return;
+            resetApp();
+
+            const file = e.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                imgInput.src = event.target.result;
+                imgInput.onload = () => {
+                    imgInput.classList.remove('hidden');
+                    document.getElementById('placeholder').classList.add('hidden');
+                    inputType = 'image';
+                    document.getElementById('processBtn').disabled = false;
+                    disableInputs(true);
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- 3. MAIN PROCESSING LOGIC ---
+        function processFrame() {
             if (!cvReady) return;
 
-            // Setup UI
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // Tentukan source (Video atau Image)
+            let srcElement = (inputType === 'camera') ? video : imgInput;
 
-            video.classList.add('hidden');
+            // Set ukuran canvas sesuai source asli agar resolusi maksimal
+            // Gunakan naturalWidth untuk gambar, videoWidth untuk video
+            let w = (inputType === 'camera') ? video.videoWidth : imgInput.naturalWidth;
+            let h = (inputType === 'camera') ? video.videoHeight : imgInput.naturalHeight;
+
+            canvas.width = w;
+            canvas.height = h;
+
+            // Gambar source ke canvas
+            ctx.drawImage(srcElement, 0, 0, w, h);
+
+            // UI Switch
+            srcElement.classList.add('hidden');
             canvas.classList.remove('hidden');
             document.getElementById('processBtn').classList.add('hidden');
             document.getElementById('resetBtn').classList.remove('hidden');
 
-            detectMonitors();
+            detectMonitorsCV();
         }
 
-        function detectMonitors() {
+        function detectMonitorsCV() {
             let src = cv.imread(canvas);
             let dst = src.clone();
             let gray = new cv.Mat();
@@ -259,22 +337,17 @@
             let contours = new cv.MatVector();
             let hierarchy = new cv.Mat();
 
-            // 1. PRE-PROCESSING
+            // A. Preprocessing
             cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-
-            // Gaussian Blur untuk mengurangi noise tekstur (karpet/tembok kasar)
             cv.GaussianBlur(gray, blur, new cv.Size(5, 5), 0);
 
-            // 2. EDGE DETECTION (CANNY)
-            // Ambang batas disesuaikan untuk menangkap bezel hitam di background lab
+            // Edge Detection
             cv.Canny(blur, edges, 30, 100);
 
-            // 3. MORPHOLOGY (DILATION) - PENTING!
-            // Menebalkan garis tepi agar bezel monitor yang putus-putus menjadi nyambung
+            // Dilasi (Menebalkan garis untuk menyambungkan border putus-putus)
             let kernel = cv.Mat.ones(3, 3, cv.CV_8U);
             cv.dilate(edges, edges, kernel, new cv.Point(-1, -1), 1);
 
-            // 4. FIND CONTOURS
             cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
             let countOn = 0;
@@ -283,105 +356,136 @@
             for (let i = 0; i < contours.size(); ++i) {
                 let cnt = contours.get(i);
 
-                // Aproksimasi Poligon (Mencari bentuk segi-4)
-                let peri = cv.arcLength(cnt, true);
-                let approx = new cv.Mat();
-                cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
-
+                // Hitung properti geometri
                 let area = cv.contourArea(cnt);
-                let rect = cv.boundingRect(cnt);
-                let aspectRatio = rect.width / rect.height;
+                let peri = cv.arcLength(cnt, true);
 
-                // FILTERING KANDIDAT MONITOR
-                // 1. Harus memiliki 4 sudut
-                // 2. Area harus cukup besar (menghindari stiker atau kotak kecil)
-                // 3. Aspect Ratio monitor (biasanya 16:9 atau 4:3, kita beri toleransi 1.2 - 2.5)
-                if (approx.rows === 4 && area > 5000 && aspectRatio > 1.2 && aspectRatio < 2.5) {
+                // Approx Poly dengan toleransi epsilon (0.02 - 0.03)
+                // Semakin besar epsilon, semakin 'kasar' penyederhanaannya.
+                let approx = new cv.Mat();
+                cv.approxPolyDP(cnt, approx, 0.025 * peri, true);
 
-                    // --- LOGIKA CEK ISI LAYAR (INSIDE THE BLACK BOX) ---
+                // --- LOGIKA "SOFT RECTANGLE" UNTUK ROUNDED CORNERS ---
 
-                    // Kita potong (crop) bagian dalam kotak untuk menghindari bezel hitam
-                    // Margin 15% dari setiap sisi
-                    let marginX = Math.floor(rect.width * 0.15);
-                    let marginY = Math.floor(rect.height * 0.15);
+                // 1. Filter Area (Hapus noise kecil)
+                // Diskalakan relatif terhadap ukuran gambar (misal 0.5% dari total gambar)
+                let minArea = (src.cols * src.rows) * 0.005;
 
-                    // Pastikan cropping valid (tidak minus)
-                    if (rect.width > 2 * marginX && rect.height > 2 * marginY) {
-                        let innerRect = new cv.Rect(
-                            rect.x + marginX,
-                            rect.y + marginY,
-                            rect.width - (2 * marginX),
-                            rect.height - (2 * marginY)
-                        );
+                if (area > minArea) {
+                    let rect = cv.boundingRect(cnt);
+                    let aspectRatio = rect.width / rect.height;
 
-                        let roi = src.roi(innerRect);
+                    // 2. Filter Aspect Ratio (Monitor biasanya melebar, bukan tiang tinggi)
+                    // Rentang 0.5 (potrait) s/d 3.5 (ultrawide)
+                    if (aspectRatio > 0.6 && aspectRatio < 3.5) {
 
-                        // Konversi ROI ke HSV untuk cek kecerahan (Value)
-                        let hsvRoi = new cv.Mat();
-                        cv.cvtColor(roi, hsvRoi, cv.COLOR_RGBA2RGB);
-                        cv.cvtColor(hsvRoi, hsvRoi, cv.COLOR_RGB2HSV);
+                        // 3. Filter Bentuk (Vertices)
+                        // Segi empat sempurna = 4 titik.
+                        // Rounded corners bisa terdeteksi sebagai 5, 6, 7, atau 8 titik tergantung smoothing.
+                        // Kita izinkan 4 s/d 10 titik.
+                        let vertices = approx.rows;
 
-                        let mean = cv.mean(hsvRoi);
-                        // mean[2] adalah Value (Brightness/Kecerahan) rata-rata (0-255)
+                        // 4. Solidity Check (Kepadatan)
+                        // Monitor adalah objek solid (convex). Luas kontur harus mendekati luas Convex Hull-nya.
+                        let hull = new cv.Mat();
+                        cv.convexHull(cnt, hull);
+                        let hullArea = cv.contourArea(hull);
+                        let solidity = area / hullArea;
+                        hull.delete();
 
-                        // --- PENENTUAN STATUS ---
-                        // Monitor Mati: Hitam Legam (Brightness rendah, biasanya < 40-50 di lab redup)
-                        // Monitor Nyala: Memancarkan cahaya (Brightness > 60-70)
+                        // SYARAT DETEKSI MONITOR:
+                        // - Jumlah sudut 4-10 (mengakomodasi rounded corners)
+                        // - Solidity tinggi (> 0.9) artinya bentuknya cembung & padat, bukan huruf 'U' atau 'L'
+                        if (vertices >= 4 && vertices <= 10 && solidity > 0.9) {
 
-                        let isMonitorOn = false;
+                            // --- CEK STATUS MONITOR (ON/OFF) ---
+                            // Potong margin 20% untuk hindari bezel & border radius
+                            let marginX = Math.floor(rect.width * 0.2);
+                            let marginY = Math.floor(rect.height * 0.2);
 
-                        // Threshold diset ke 65.
-                        // Jika rata-rata kecerahan "isi perut" monitor > 65, anggap NYALA.
-                        if (mean[2] > 65) {
-                            isMonitorOn = true;
+                            // Validasi ukuran crop
+                            if (rect.width > 2.5 * marginX && rect.height > 2.5 * marginY) {
+                                let innerRect = new cv.Rect(
+                                    rect.x + marginX,
+                                    rect.y + marginY,
+                                    rect.width - (2 * marginX),
+                                    rect.height - (2 * marginY)
+                                );
+
+                                let roi = src.roi(innerRect);
+                                let hsvRoi = new cv.Mat();
+                                cv.cvtColor(roi, hsvRoi, cv.COLOR_RGBA2RGB);
+                                cv.cvtColor(hsvRoi, hsvRoi, cv.COLOR_RGB2HSV);
+
+                                let mean = cv.mean(hsvRoi);
+                                // mean[2] = Brightness (Value)
+
+                                let isMonitorOn = false;
+                                // Threshold disesuaikan. Lab cenderung gelap, layar mati ~30-40.
+                                if (mean[2] > 70) {
+                                    isMonitorOn = true;
+                                    countOn++;
+                                } else {
+                                    countOff++;
+                                }
+
+                                // Gambar Hasil
+                                let color = isMonitorOn ? new cv.Scalar(0, 255, 0, 255) : new cv.Scalar(255, 0, 0, 255);
+
+                                // Gambar kotak mengikuti bounding rect (lebih rapi daripada kontur asli yang mungkin bergerigi)
+                                let pt1 = new cv.Point(rect.x, rect.y);
+                                let pt2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
+                                cv.rectangle(dst, pt1, pt2, color, 4);
+
+                                // Label
+                                let label = isMonitorOn ? `ON (${Math.round(mean[2])})` : `OFF (${Math.round(mean[2])})`;
+                                cv.putText(dst, label, { x: rect.x, y: rect.y - 10 }, cv.FONT_HERSHEY_SIMPLEX, 0.7, color, 2);
+
+                                roi.delete(); hsvRoi.delete();
+                            }
                         }
-
-                        // Jika monitor menampilkan gambar gelap tapi nyala (misal terminal), 
-                        // biasanya varian warna (stdDev) atau saturasi masih ada.
-                        // Tapi untuk kasus umum, Brightness check sudah cukup ampuh.
-
-                        // VISUALISASI HASIL
-                        let color;
-                        if (isMonitorOn) {
-                            countOn++;
-                            color = new cv.Scalar(0, 255, 0, 255); // Hijau
-                        } else {
-                            countOff++;
-                            color = new cv.Scalar(255, 0, 0, 255); // Merah
-                        }
-
-                        // Gambar Kotak
-                        cv.rectangle(dst, new cv.Point(rect.x, rect.y), new cv.Point(rect.x + rect.width, rect.y + rect.height), color, 3);
-
-                        // Tulis Label
-                        cv.putText(dst, isMonitorOn ? "ON" : "OFF", { x: rect.x, y: rect.y - 10 }, cv.FONT_HERSHEY_SIMPLEX, 0.8, color, 2);
-
-                        // Cleanup Loop
-                        roi.delete(); hsvRoi.delete();
                     }
                 }
                 approx.delete();
             }
 
-            // Tampilkan ke Canvas
             cv.imshow('canvasOutput', dst);
-
-            // Update Statistik
             document.getElementById('cntOn').innerText = countOn;
             document.getElementById('cntOff').innerText = countOff;
             document.getElementById('resultPanel').classList.remove('hidden');
 
-            // Cleanup Memory
             src.delete(); dst.delete(); gray.delete(); blur.delete();
             edges.delete(); kernel.delete(); contours.delete(); hierarchy.delete();
         }
 
-        function reset() {
-            document.getElementById('canvasOutput').classList.add('hidden');
-            document.getElementById('videoInput').classList.remove('hidden');
+        // --- UTILS ---
+        function resetApp() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            video.classList.add('hidden');
+            imgInput.classList.add('hidden');
+            canvas.classList.add('hidden');
+            document.getElementById('placeholder').classList.remove('hidden');
+
             document.getElementById('processBtn').classList.remove('hidden');
+            document.getElementById('processBtn').disabled = true;
             document.getElementById('resetBtn').classList.add('hidden');
             document.getElementById('resultPanel').classList.add('hidden');
+
+            // Reset file input value
+            document.getElementById('fileInput').value = '';
+            disableInputs(false);
+            inputType = 'none';
+        }
+
+        function disableInputs(disabled) {
+            document.getElementById('camBtn').disabled = disabled;
+            // Label input file tidak bisa didisable langsung via atribut, kita mainkan pointer-events
+            const lbl = document.querySelector('.file-upload-label');
+            lbl.style.pointerEvents = disabled ? 'none' : 'auto';
+            lbl.style.opacity = disabled ? '0.5' : '1';
         }
     </script>
 </body>
