@@ -3,409 +3,454 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor Detector: Frequency Analysis</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600&display=swap"
-        rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Live Monitor Detector AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady()"
         type="text/javascript"></script>
 
     <style>
         :root {
-            --accent: #f59e0b;
-            --bg: #0b0f19;
-            --panel: #111827;
-            --text: #e2e8f0;
-            --on: #22c55e;
-            --off: #ef4444;
+            --primary: #6366f1;
+            --success: #22c55e;
+            /* Hijau Monitor Nyala */
+            --danger: #ef4444;
+            /* Merah Monitor Mati */
+            --bg: #0f172a;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 0;
             margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            font-family: 'Inter', sans-serif;
+            color: white;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
-        }
-
-        /* Header Techy */
-        header {
-            width: 100%;
-            background: #0f172a;
-            padding: 15px 0;
-            border-bottom: 1px solid #1e293b;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.2rem;
-            font-family: 'JetBrains Mono', monospace;
-            color: var(--accent);
-            letter-spacing: -1px;
-        }
-
-        .sub {
-            font-size: 0.8rem;
-            color: #64748b;
-        }
-
-        .main-stage {
-            position: relative;
-            width: 95%;
-            max-width: 1000px;
-            aspect-ratio: 16/9;
-            background: #000;
-            border-radius: 12px;
+            height: 100vh;
             overflow: hidden;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
-            border: 1px solid #334155;
+            /* Mencegah scroll saat fullscreen */
         }
 
+        /* Container Kamera & Canvas */
+        .camera-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            /* Batas lebar di desktop */
+            height: auto;
+            aspect-ratio: 9/16;
+            /* Default mobile aspect */
+            background: black;
+            overflow: hidden;
+            border-radius: 0 0 16px 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Responsif untuk Desktop */
+        @media (min-width: 768px) {
+            .camera-container {
+                aspect-ratio: 16/9;
+                margin-top: 20px;
+                border-radius: 16px;
+            }
+        }
+
+        /* Video dan Canvas bertumpuk (Overlay) */
         video,
         canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            object-fit: cover;
+            /* Memastikan layar penuh */
         }
 
-        /* HUD Overlay */
-        .hud {
+        /* UI Overlay di atas video */
+        .hud-overlay {
             position: absolute;
             top: 20px;
             left: 20px;
-            pointer-events: none;
-        }
-
-        .hud-panel {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(8px);
-            padding: 12px;
-            border-radius: 8px;
-            border-left: 3px solid var(--accent);
-            color: #fff;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            min-width: 140px;
-        }
-
-        .hud-row {
+            right: 20px;
             display: flex;
             justify-content: space-between;
+            pointer-events: none;
+            /* Agar klik tembus ke bawah */
+            z-index: 10;
         }
 
-        .val {
-            font-weight: bold;
+        .badge {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(4px);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .c-on {
-            color: var(--on);
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
         }
 
-        .c-off {
-            color: var(--off);
+        .bg-green {
+            background: var(--success);
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        .bg-red {
+            background: var(--danger);
+            box-shadow: 0 0 8px var(--danger);
+        }
+
+        .loader-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            transition: opacity 0.5s;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #333;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .controls {
-            margin-top: 20px;
+            padding: 20px;
+            width: 100%;
+            max-width: 800px;
             display: flex;
+            justify-content: center;
             gap: 15px;
         }
 
         button {
-            background: var(--panel);
-            border: 1px solid #334155;
-            color: var(--text);
+            background: var(--primary);
+            color: white;
+            border: none;
             padding: 12px 24px;
-            border-radius: 6px;
+            border-radius: 50px;
             font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
             cursor: pointer;
-            transition: 0.2s;
-            font-family: 'Inter', sans-serif;
-        }
-
-        button:hover {
-            border-color: var(--accent);
-            color: var(--accent);
-        }
-
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            border-color: transparent;
-        }
-
-        .loading {
-            color: var(--accent);
-            font-size: 0.9rem;
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-        }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* Debug info */
-        .debug-tag {
-            font-size: 0.7rem;
-            color: #94a3b8;
-            margin-top: 10px;
-            max-width: 600px;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
     </style>
 </head>
 
 <body>
 
-    <header>
-        <h1>DIP MONITOR SCANNER // v5.0</h1>
-        <div class="sub">Frequency Domain Analysis (High-Pass Filter)</div>
-    </header>
+    <!-- Loading Screen -->
+    <div id="loader" class="loader-container">
+        <div class="spinner"></div>
+        <p style="margin-top:15px; color:#94a3b8;">Memuat AI Engine...</p>
+    </div>
 
-    <div class="main-stage">
-        <div id="loader" class="loading"
-            style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
-            INITIALIZING OPENCV...
-        </div>
+    <!-- Main Camera View -->
+    <div class="camera-container">
+        <video id="videoElement" playsinline autoplay muted></video>
+        <!-- Canvas Transparan untuk menggambar kotak -->
+        <canvas id="outputCanvas"></canvas>
 
-        <video id="videoInput" playsinline autoplay muted></video>
-        <canvas id="canvasOutput" class="hidden"></canvas>
-
-        <div class="hud hidden" id="hud">
-            <div class="hud-panel">
-                <div class="hud-row"><span>STATUS</span> <span class="val" style="color:#38bdf8">SCANNING</span></div>
-                <div style="height:1px; background:#334155; margin: 5px 0;"></div>
-                <div class="hud-row"><span>ACTIVE</span> <span class="val c-on" id="cntOn">0</span></div>
-                <div class="hud-row"><span>OFF</span> <span class="val c-off" id="cntOff">0</span></div>
+        <!-- HUD Statistik -->
+        <div class="hud-overlay">
+            <div class="badge">
+                <div class="dot bg-green"></div>
+                <span id="statOn">ON: 0</span>
+            </div>
+            <div class="badge">
+                <div class="dot bg-red"></div>
+                <span id="statOff">OFF: 0</span>
             </div>
         </div>
     </div>
 
     <div class="controls">
-        <button id="btnCam" onclick="startCam()">ACTIVATE CAMERA</button>
-        <button id="btnScan" onclick="detect()" disabled>SCAN FRAME</button>
-        <button id="btnReset" onclick="reset()" class="hidden">RESET SYSTEM</button>
+        <button onclick="switchCamera()">🔄 Putar Kamera</button>
     </div>
 
-    <p class="debug-tag">
-        Algorithm: CLAHE Segmentation + Laplacian Variance (Frequency Check).<br>
-        High Texture = Content (ON). Smooth + Bright = Glare (OFF).
-    </p>
-
     <script>
-        let video = document.getElementById('videoInput');
-        let canvas = document.getElementById('canvasOutput');
-        let ctx = canvas.getContext('2d', { willReadFrequently: true });
+        let video = document.getElementById('videoElement');
+        let canvas = document.getElementById('outputCanvas');
+        let ctx = canvas.getContext('2d');
+
         let stream = null;
-        let cvReady = false;
+        let isCvReady = false;
+        let isProcessing = false;
+        let facingMode = 'environment'; // Default kamera belakang
+
+        // Variabel untuk Memory Management OpenCV
+        let srcMat, grayMat, claheMat, blurMat, edgesMat;
+        let claheObj;
+        let contours, hierarchy;
 
         function onOpenCvReady() {
-            cvReady = true;
-            document.getElementById('loader').classList.add('hidden');
-            console.log("OpenCV Ready");
+            console.log('OpenCV Ready');
+            isCvReady = true;
+            document.getElementById('loader').style.display = 'none';
+            startCamera();
         }
 
-        async function startCam() {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
-                });
-                video.srcObject = stream;
-                video.onloadedmetadata = () => {
-                    document.getElementById('btnCam').classList.add('hidden');
-                    document.getElementById('btnScan').disabled = false;
-                };
-            } catch (e) { alert("Camera Error: " + e); }
-        }
-
-        function detect() {
-            if (!cvReady) return;
-
-            // Setup View
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            video.classList.add('hidden');
-            canvas.classList.remove('hidden');
-            document.getElementById('hud').classList.remove('hidden');
-            document.getElementById('btnScan').classList.add('hidden');
-            document.getElementById('btnReset').classList.remove('hidden');
-
-            // --- IMAGE PROCESSING PIPELINE ---
-            let src = cv.imread(canvas);
-            let dst = src.clone();
-            let gray = new cv.Mat();
-            let claheMat = new cv.Mat();
-            let edges = new cv.Mat();
-            let contours = new cv.MatVector();
-            let hierarchy = new cv.Mat();
-
-            // 1. PRE-PROCESSING (Segmentasi Bentuk)
-            cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-
-            // CLAHE: Meningkatkan kontras lokal untuk menangani monitor abu-abu gelap
-            let clahe = new cv.CLAHE(2.5, new cv.Size(8, 8));
-            clahe.apply(gray, claheMat);
-
-            // Gaussian Blur & Canny Edge
-            let blur = new cv.Mat();
-            cv.GaussianBlur(claheMat, blur, new cv.Size(5, 5), 0);
-            cv.Canny(blur, edges, 20, 60); // Threshold sensitif untuk menangkap bingkai tipis
-
-            // Dilasi: Menyambungkan garis putus-putus pada bingkai
-            let kernel = cv.Mat.ones(3, 3, cv.CV_8U);
-            cv.dilate(edges, edges, kernel, new cv.Point(-1, -1), 2);
-
-            // Find Contours
-            cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
-            let statsOn = 0;
-            let statsOff = 0;
-
-            for (let i = 0; i < contours.size(); ++i) {
-                let cnt = contours.get(i);
-                let area = cv.contourArea(cnt);
-
-                // FILTER UKURAN:
-                // Turunkan batas minimum ke 800px untuk menangkap monitor jauh
-                if (area < 800) continue;
-
-                let rect = cv.boundingRect(cnt);
-                let aspectRatio = rect.width / rect.height;
-                let peri = cv.arcLength(cnt, true);
-                let approx = new cv.Mat();
-                cv.approxPolyDP(cnt, approx, 0.03 * peri, true);
-
-                // Solidity Check (Objek harus padat/cembung)
-                let hull = new cv.Mat();
-                cv.convexHull(cnt, hull);
-                let hullArea = cv.contourArea(hull);
-                let solidity = area / hullArea;
-
-                // LOGIKA BENTUK:
-                // Monitor = Persegi Panjang (agak lebar), Padat (Solidity > 0.85)
-                // Kita izinkan vertices 4-12 untuk mengakomodasi rounded corners
-                if (aspectRatio > 1.1 && aspectRatio < 4.0 && solidity > 0.85 && approx.rows >= 4 && approx.rows <= 12) {
-
-                    // --- ANALISIS ISI LAYAR ---
-                    // Crop margin 25% (hindari bezel & border radius)
-                    let marginX = Math.floor(rect.width * 0.25);
-                    let marginY = Math.floor(rect.height * 0.25);
-
-                    if (rect.width > 2.2 * marginX) {
-                        let innerRect = new cv.Rect(
-                            rect.x + marginX, rect.y + marginY,
-                            rect.width - (2 * marginX), rect.height - (2 * marginY)
-                        );
-
-                        let roi = src.roi(innerRect);
-                        let grayRoi = new cv.Mat();
-                        cv.cvtColor(roi, grayRoi, cv.COLOR_RGBA2GRAY);
-
-                        // 1. CEK FREKUENSI / TEKSTUR (PENGGANTI FFT)
-                        // Menggunakan Laplacian Operator. 
-                        // Laplacian adalah High-Pass Filter di domain spasial.
-                        // Hasilnya setara dengan mencari frekuensi tinggi di FFT.
-                        let laplacian = new cv.Mat();
-                        cv.Laplacian(grayRoi, laplacian, cv.CV_64F);
-
-                        let meanStdDev = new cv.Mat();
-                        let stdDev = new cv.Mat();
-                        cv.meanStdDev(laplacian, meanStdDev, stdDev);
-
-                        // "Score" Tekstur. Semakin tinggi varians, semakin banyak detail (huruf/gambar).
-                        // Layar mulus (glare) akan memiliki score rendah.
-                        let textureScore = Math.pow(stdDev.data64F[0], 2);
-
-                        // 2. CEK KECERAHAN (BRIGHTNESS)
-                        let hsvRoi = new cv.Mat();
-                        cv.cvtColor(roi, hsvRoi, cv.COLOR_RGBA2RGB);
-                        cv.cvtColor(hsvRoi, hsvRoi, cv.COLOR_RGB2HSV);
-                        let meanColor = cv.mean(hsvRoi);
-                        let brightness = meanColor[2]; // Value channel
-
-                        // --- LOGIKA KEPUTUSAN FINAL (ON vs OFF) ---
-                        let isMonitorOn = false;
-
-                        // Rule A: Tekstur Tinggi (Pasti ON)
-                        // Jika score tekstur > 150 (banyak teks/kodingan), monitor dianggap NYALA 
-                        // meskipun brightnessnya agak rendah (Dark Mode).
-                        if (textureScore > 150) {
-                            isMonitorOn = true;
-                        }
-                        // Rule B: Brightness Tinggi TAPI Tekstur Rendah (Glare)
-                        // Jika brightness tinggi (>80) tapi tekstur sangat rendah (<50), 
-                        // itu adalah PANTULAN CAHAYA di layar mati.
-                        else if (brightness > 80 && textureScore < 80) {
-                            isMonitorOn = false;
-                        }
-                        // Rule C: Brightness Menengah/Tinggi dan ada Tekstur
-                        else if (brightness > 60 && textureScore > 50) {
-                            isMonitorOn = true;
-                        }
-
-                        // VISUALISASI
-                        let color = isMonitorOn ? new cv.Scalar(34, 197, 94, 255) : new cv.Scalar(239, 68, 68, 255);
-                        if (isMonitorOn) statsOn++; else statsOff++;
-
-                        // Gambar Kotak
-                        cv.rectangle(dst, new cv.Point(rect.x, rect.y), new cv.Point(rect.x + rect.width, rect.y + rect.height), color, 2);
-
-                        // Info Label (Debug Value untuk tuning)
-                        // T = Texture Score, B = Brightness
-                        let label = `${isMonitorOn ? "ON" : "OFF"} (T:${Math.round(textureScore)} B:${Math.round(brightness)})`;
-
-                        // Background Label
-                        let textSize = cv.getTextSize(label, cv.FONT_HERSHEY_PLAIN, 1, 1, 0);
-                        cv.rectangle(dst, new cv.Point(rect.x, rect.y - 20), new cv.Point(rect.x + textSize.size.width + 10, rect.y), color, -1);
-                        cv.putText(dst, label, { x: rect.x + 5, y: rect.y - 5 }, cv.FONT_HERSHEY_PLAIN, 1.0, new cv.Scalar(255, 255, 255, 255), 1);
-
-                        // Cleanup Loop
-                        roi.delete(); grayRoi.delete(); hsvRoi.delete(); laplacian.delete();
-                        meanStdDev.delete(); stdDev.delete();
-                    }
-                }
-                approx.delete(); hull.delete();
+        async function startCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
             }
 
-            cv.imshow('canvasOutput', dst);
-            document.getElementById('cntOn').innerText = statsOn;
-            document.getElementById('cntOff').innerText = statsOff;
+            try {
+                // Konfigurasi resolusi. Gunakan HD agar deteksi detail bagus tapi tidak terlalu berat.
+                const constraints = {
+                    video: {
+                        facingMode: facingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                video.srcObject = stream;
 
-            // Cleanup Global
-            src.delete(); dst.delete(); gray.delete(); blur.delete();
-            edges.delete(); kernel.delete(); contours.delete(); hierarchy.delete(); clahe.delete(); claheMat.delete();
+                video.onloadedmetadata = () => {
+                    video.play();
+                    // Sesuaikan ukuran canvas dengan ukuran render video
+                    adjustCanvasSize();
+                    // Mulai Loop Deteksi
+                    requestAnimationFrame(processVideo);
+                };
+            } catch (err) {
+                alert("Gagal mengakses kamera: " + err);
+            }
         }
 
-        function reset() {
-            canvas.classList.add('hidden');
-            document.getElementById('hud').classList.add('hidden');
-            video.classList.remove('hidden');
-            document.getElementById('btnScan').classList.remove('hidden');
-            document.getElementById('btnReset').classList.add('hidden');
+        function switchCamera() {
+            facingMode = facingMode === 'user' ? 'environment' : 'user';
+            startCamera();
+        }
+
+        function adjustCanvasSize() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+        }
+
+        // Variabel Throttling (Agar tidak lag)
+        let lastProcessTime = 0;
+        const PROCESS_DELAY = 150; // Deteksi dijalankan setiap 150ms (sekitar 6-7 FPS)
+
+        function processVideo(timestamp) {
+            if (!isCvReady || video.paused || video.ended) {
+                requestAnimationFrame(processVideo);
+                return;
+            }
+
+            // Bersihkan canvas setiap frame agar kotak lama hilang
+            // Kita bersihkan canvas UI, tapi deteksi AI pakai interval
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Cek apakah sudah waktunya memproses frame (Throttling)
+            if (timestamp - lastProcessTime > PROCESS_DELAY) {
+                detectMonitors();
+                lastProcessTime = timestamp;
+            } else {
+                // Jika belum waktunya deteksi baru, gambar ulang hasil terakhir (agar kotak tidak kedip-kedip)
+                drawLastResults();
+            }
+
+            requestAnimationFrame(processVideo);
+        }
+
+        // Menyimpan hasil deteksi terakhir untuk digambar di frame sela
+        let detectedMonitors = [];
+
+        function detectMonitors() {
+            try {
+                // Inisialisasi Matriks (Hanya sekali atau jika ukuran berubah)
+                if (!srcMat) {
+                    srcMat = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC4);
+                    grayMat = new cv.Mat();
+                    claheMat = new cv.Mat();
+                    blurMat = new cv.Mat();
+                    edgesMat = new cv.Mat();
+                    contours = new cv.MatVector();
+                    hierarchy = new cv.Mat();
+                    claheObj = new cv.CLAHE(2.5, new cv.Size(8, 8));
+                }
+
+                // 1. Ambil gambar dari video ke OpenCV Mat
+                let cap = new cv.VideoCapture(video);
+                cap.read(srcMat);
+
+                // 2. Pre-processing (Grayscale + CLAHE + Blur)
+                cv.cvtColor(srcMat, grayMat, cv.COLOR_RGBA2GRAY);
+                claheObj.apply(grayMat, claheMat); // Tingkatkan kontras (penting utk monitor gelap)
+                cv.GaussianBlur(claheMat, blurMat, new cv.Size(5, 5), 0);
+
+                // 3. Deteksi Tepi
+                cv.Canny(blurMat, edgesMat, 25, 80);
+
+                // 4. Dilasi (Sambungkan garis putus)
+                let kernel = cv.Mat.ones(3, 3, cv.CV_8U);
+                cv.dilate(edgesMat, edgesMat, kernel, new cv.Point(-1, -1), 2);
+                kernel.delete();
+
+                // 5. Cari Kontur
+                cv.findContours(edgesMat, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+
+                // Reset hasil deteksi
+                detectedMonitors = [];
+                let onCount = 0;
+                let offCount = 0;
+
+                for (let i = 0; i < contours.size(); ++i) {
+                    let cnt = contours.get(i);
+                    let area = cv.contourArea(cnt);
+
+                    // Filter Ukuran (Tampilkan monitor yang terlihat agak jelas saja)
+                    if (area < 1000) continue;
+
+                    let rect = cv.boundingRect(cnt);
+                    let aspectRatio = rect.width / rect.height;
+
+                    // Filter Bentuk (Asumsi Monitor)
+                    if (aspectRatio > 1.1 && aspectRatio < 4.0) {
+
+                        // Soliditas (Cek apakah bentuknya padat/cembung)
+                        let hull = new cv.Mat();
+                        cv.convexHull(cnt, hull);
+                        let hullArea = cv.contourArea(hull);
+                        let solidity = area / hullArea;
+                        hull.delete();
+
+                        if (solidity > 0.85) {
+                            // --- ANALISIS STATUS ---
+                            // Crop bagian tengah (hindari bezel)
+                            let marginX = Math.floor(rect.width * 0.25);
+                            let marginY = Math.floor(rect.height * 0.25);
+
+                            if (rect.width > 2.5 * marginX) {
+                                // Buat ROI (Region of Interest)
+                                let roiRect = new cv.Rect(
+                                    rect.x + marginX, rect.y + marginY,
+                                    rect.width - (2 * marginX), rect.height - (2 * marginY)
+                                );
+                                let roi = srcMat.roi(roiRect);
+
+                                // A. Cek Tekstur (Laplacian Variance) -> Deteksi Glare
+                                let grayRoi = new cv.Mat();
+                                cv.cvtColor(roi, grayRoi, cv.COLOR_RGBA2GRAY);
+                                let laplacian = new cv.Mat();
+                                cv.Laplacian(grayRoi, laplacian, cv.CV_64F);
+                                let meanStdDev = new cv.Mat();
+                                let stdDev = new cv.Mat();
+                                cv.meanStdDev(laplacian, meanStdDev, stdDev);
+                                let textureScore = Math.pow(stdDev.data64F[0], 2);
+
+                                // B. Cek Brightness (HSV Value)
+                                let hsvRoi = new cv.Mat();
+                                cv.cvtColor(roi, hsvRoi, cv.COLOR_RGBA2RGB); // OpenCV.js RGBA source
+                                cv.cvtColor(hsvRoi, hsvRoi, cv.COLOR_RGB2HSV);
+                                let meanHsv = cv.mean(hsvRoi);
+                                let brightness = meanHsv[2];
+
+                                // LOGIKA KEPUTUSAN
+                                let status = "OFF";
+
+                                // Rule 1: Texture tinggi = Pasti ON (ada tulisan/gambar)
+                                if (textureScore > 120) {
+                                    status = "ON";
+                                }
+                                // Rule 2: Brightness tinggi tapi tekstur sangat rendah = Glare (OFF)
+                                else if (brightness > 80 && textureScore < 60) {
+                                    status = "OFF";
+                                }
+                                // Rule 3: Brightness lumayan dan ada tekstur sedikit
+                                else if (brightness > 60 && textureScore > 40) {
+                                    status = "ON";
+                                }
+
+                                if (status === "ON") onCount++; else offCount++;
+
+                                // Simpan data untuk digambar
+                                detectedMonitors.push({
+                                    x: rect.x, y: rect.y, w: rect.width, h: rect.height,
+                                    status: status,
+                                    score: `T:${Math.round(textureScore)} B:${Math.round(brightness)}`
+                                });
+
+                                // Cleanup Loop
+                                roi.delete(); grayRoi.delete(); laplacian.delete();
+                                meanStdDev.delete(); stdDev.delete(); hsvRoi.delete();
+                            }
+                        }
+                    }
+                }
+
+                // Update UI Statistik
+                document.getElementById('statOn').innerText = `ON: ${onCount}`;
+                document.getElementById('statOff').innerText = `OFF: ${offCount}`;
+
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Fungsi menggambar kotak di atas video (HTML5 Canvas API)
+        function drawLastResults() {
+            // Font setting
+            ctx.font = "bold 16px Inter";
+            ctx.lineWidth = 3;
+
+            detectedMonitors.forEach(monitor => {
+                let color = monitor.status === "ON" ? "#22c55e" : "#ef4444"; // Hijau / Merah
+
+                // 1. Gambar Kotak
+                ctx.strokeStyle = color;
+                ctx.beginPath();
+                // Membuat sudut rounded sedikit (opsional)
+                ctx.roundRect(monitor.x, monitor.y, monitor.w, monitor.h, 8);
+                ctx.stroke();
+
+                // 2. Background Label
+                ctx.fillStyle = color;
+                let text = monitor.status; // + " " + monitor.score; (Aktifkan score jika ingin debug)
+                let textWidth = ctx.measureText(text).width;
+
+                ctx.fillRect(monitor.x, monitor.y - 25, textWidth + 20, 25);
+
+                // 3. Teks Label
+                ctx.fillStyle = "white";
+                ctx.fillText(text, monitor.x + 10, monitor.y - 7);
+            });
         }
     </script>
 </body>
