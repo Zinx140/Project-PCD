@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor Detector Pro - Enhanced</title>
+    <title>Monitor Detector Pro - Skeleton View</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
@@ -39,12 +39,11 @@
 
         h1 {
             font-size: 1.8rem;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             background: linear-gradient(to right, #60a5fa, #a78bfa);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             font-weight: 700;
-            text-align: center;
         }
 
         .status-badge {
@@ -54,17 +53,11 @@
             border-radius: 20px;
             font-size: 0.9rem;
             font-weight: 600;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        .status-badge.loading {
-            background-color: rgba(234, 179, 8, 0.2);
-            color: #fbbf24;
-            border-color: rgba(234, 179, 8, 0.3);
         }
 
         .detector-card {
@@ -74,7 +67,7 @@
             align-items: center;
         }
 
-        /* Container 1:1 Aspect Ratio */
+        /* Viewport 1:1 */
         .viewport-container {
             width: 100%;
             max-width: 450px;
@@ -90,86 +83,52 @@
             justify-content: center;
         }
 
-        video,
-        canvas,
-        img {
+        canvas {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            object-position: center;
             position: absolute;
             top: 0;
             left: 0;
         }
 
+        /* UI Elements */
         .placeholder-text {
             color: var(--text-muted);
             font-size: 1.1rem;
             z-index: 10;
         }
 
-        .control-bar {
+        /* Loading Skeleton (Animasi) */
+        .skeleton-loader {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-width: 450px;
-            background-color: var(--card-bg);
-            padding: 20px;
-            border-bottom-left-radius: var(--border-radius);
-            border-bottom-right-radius: var(--border-radius);
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            border: 1px solid #334155;
-            border-top: none;
+            height: 100%;
+            background: linear-gradient(to right, #1e293b 4%, #334155 25%, #1e293b 36%);
+            background-size: 1000px 100%;
+            animation: shimmer 2s infinite linear;
+            z-index: 20;
+            display: none;
+            opacity: 0.9;
         }
 
-        .btn {
-            flex: 1;
-            padding: 12px;
-            border-radius: 8px;
-            border: none;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: all 0.2s;
+        .skeleton-loader.active {
+            display: block;
         }
 
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+
+            100% {
+                background-position: 1000px 0;
+            }
         }
 
-        .btn-primary:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .btn-secondary {
-            background-color: #374151;
-            color: #9ca3af;
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background-color: #4b5563;
-            color: white;
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        .tip {
-            margin-top: 15px;
-            color: #64748b;
-            font-size: 0.85rem;
-            text-align: center;
-            max-width: 450px;
-        }
-
-        /* Stats & Overlay */
+        /* Stats & Controls */
         .stats-overlay {
             position: absolute;
             top: 15px;
@@ -198,32 +157,121 @@
             background-color: rgba(239, 68, 68, 0.9);
         }
 
-        .skeleton-loader {
+        .control-bar {
+            width: 100%;
+            max-width: 450px;
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-bottom-left-radius: var(--border-radius);
+            border-bottom-right-radius: var(--border-radius);
+            border: 1px solid #334155;
+            border-top: none;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .buttons-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #374151;
+            color: #9ca3af;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #4b5563;
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Toggle Switch untuk Skeleton View */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            display: none;
+            /* Hidden until scanned */
+        }
+
+        .toggle-label {
+            font-size: 0.9rem;
+            color: #cbd5e1;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
             position: absolute;
+            cursor: pointer;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to right, #1e293b 4%, #334155 25%, #1e293b 36%);
-            background-size: 1000px 100%;
-            animation: shimmer 2s infinite linear;
-            z-index: 20;
-            display: none;
-            opacity: 0.8;
+            right: 0;
+            bottom: 0;
+            background-color: #475569;
+            transition: .4s;
+            border-radius: 24px;
         }
 
-        .skeleton-loader.active {
-            display: block;
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
         }
 
-        @keyframes shimmer {
-            0% {
-                background-position: -1000px 0;
-            }
+        input:checked+.slider {
+            background-color: var(--accent-purple);
+        }
 
-            100% {
-                background-position: 1000px 0;
-            }
+        input:checked+.slider:before {
+            transform: translateX(20px);
         }
 
         #cameraInput {
@@ -242,9 +290,12 @@
 
     <div class="detector-card">
         <div class="viewport-container">
-            <div id="skeleton" class="skeleton-loader"></div>
+            <!-- Loading Animation -->
+            <div id="skeletonLoader" class="skeleton-loader"></div>
+
             <p id="placeholder" class="placeholder-text">Kamera Nonaktif</p>
             <canvas id="outputCanvas" style="display: none;"></canvas>
+
             <div id="statsBox" class="stats-overlay">
                 <div class="stat-badge stat-on">ON: <span id="countOn">0</span></div>
                 <div class="stat-badge stat-off">OFF: <span id="countOff">0</span></div>
@@ -252,18 +303,31 @@
         </div>
 
         <div class="control-bar">
-            <button class="btn btn-primary" onclick="document.getElementById('cameraInput').click()">
-                <i class="fas fa-camera"></i> Kamera
-            </button>
+            <!-- Toggle Skeleton View (Muncul setelah scan) -->
+            <div id="viewToggle" class="toggle-container">
+                <span class="toggle-label"><i class="fas fa-bone"></i> Lihat Skeleton (Edges)</span>
+                <label class="switch">
+                    <input type="checkbox" id="skeletonCheckbox" onchange="toggleView()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <div class="buttons-row">
+                <button class="btn btn-primary" onclick="document.getElementById('cameraInput').click()">
+                    <i class="fas fa-camera"></i> Kamera
+                </button>
+                <button id="btnScan" class="btn btn-secondary" disabled onclick="processImage()">
+                    <i class="fas fa-magic"></i> Scan
+                </button>
+            </div>
+
             <input type="file" id="cameraInput" accept="image/*" capture="environment"
                 onchange="handleImageUpload(event)">
-            <button id="btnScan" class="btn btn-secondary" disabled onclick="processImage()">
-                <i class="fas fa-magic"></i> Scan
-            </button>
         </div>
     </div>
 
-    <p class="tip">Pastikan bingkai monitor terlihat jelas. Algoritma dioptimalkan untuk background gelap & pantulan.
+    <p style="margin-top: 15px; color: #64748b; font-size: 0.8rem; text-align: center;">
+        Tips: Aktifkan "Lihat Skeleton" untuk melihat bagaimana komputer mendeteksi garis tepi monitor.
     </p>
 
     <!-- OpenCV.js -->
@@ -272,12 +336,21 @@
 
     <script>
         let cvReady = false;
+
+        // Elemen DOM
         const canvas = document.getElementById('outputCanvas');
         const ctx = canvas.getContext('2d');
         const placeholder = document.getElementById('placeholder');
         const btnScan = document.getElementById('btnScan');
-        const skeleton = document.getElementById('skeleton');
+        const loader = document.getElementById('skeletonLoader');
         const statsBox = document.getElementById('statsBox');
+        const viewToggle = document.getElementById('viewToggle');
+        const skeletonCheckbox = document.getElementById('skeletonCheckbox');
+
+        // Penyimpanan hasil proses untuk Toggle View
+        let processedResultMat = null; // Menyimpan hasil warna (final)
+        let processedEdgesMat = null;  // Menyimpan hasil skeleton (hitam putih)
+        let isImageLoaded = false;
 
         function onOpenCvReady() {
             cvReady = true;
@@ -294,26 +367,28 @@
                 reader.onload = function (e) {
                     const img = new Image();
                     img.onload = function () {
-                        // Crop Center 1:1
                         const size = Math.min(img.width, img.height);
                         const sx = (img.width - size) / 2;
                         const sy = (img.height - size) / 2;
 
                         canvas.width = size;
                         canvas.height = size;
-
-                        // Draw clean image
                         ctx.drawImage(img, sx, sy, size, size, 0, 0, size, size);
 
                         // Reset UI
                         placeholder.style.display = 'none';
                         canvas.style.display = 'block';
                         statsBox.style.display = 'none';
-                        document.getElementById('countOn').innerText = '0';
-                        document.getElementById('countOff').innerText = '0';
+                        viewToggle.style.display = 'none'; // Sembunyikan toggle saat ganti gambar
+                        skeletonCheckbox.checked = false;
+
+                        // Reset Memory
+                        if (processedResultMat) { processedResultMat.delete(); processedResultMat = null; }
+                        if (processedEdgesMat) { processedEdgesMat.delete(); processedEdgesMat = null; }
 
                         if (cvReady) btnScan.disabled = false;
                         btnScan.className = "btn btn-primary";
+                        isImageLoaded = true;
                     }
                     img.src = e.target.result;
                 }
@@ -322,20 +397,30 @@
         }
 
         function processImage() {
-            if (!cvReady) return;
-            skeleton.classList.add('active');
-            btnScan.disabled = true;
+            if (!cvReady || !isImageLoaded) return;
 
+            // UI Loading Effect
+            loader.classList.add('active');
+            btnScan.disabled = true;
+            viewToggle.style.display = 'none';
+
+            // Timeout agar UI sempat render loadingnya
             setTimeout(() => {
-                detectMonitorsSmart();
-                skeleton.classList.remove('active');
+                detectMonitorsAndGenSkeleton();
+
+                loader.classList.remove('active');
                 btnScan.disabled = false;
                 statsBox.style.display = 'flex';
+                viewToggle.style.display = 'flex'; // Munculkan tombol Skeleton
             }, 300);
         }
 
-        // --- ALGORITMA DIPERBARUI ---
-        function detectMonitorsSmart() {
+        // --- Logic Utama + Generate Skeleton ---
+        function detectMonitorsAndGenSkeleton() {
+            // Bersihkan memori lama jika ada
+            if (processedResultMat) processedResultMat.delete();
+            if (processedEdgesMat) processedEdgesMat.delete();
+
             let src = cv.imread(canvas);
             let gray = new cv.Mat();
             let blur = new cv.Mat();
@@ -345,15 +430,17 @@
 
             // 1. Preprocessing
             cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
-
-            // Menggunakan Bilateral Filter menjaga tepi tetap tajam tapi mengurangi noise
             cv.bilateralFilter(gray, blur, 9, 75, 75);
 
-            // 2. Edge Detection (Threshold lebih rendah untuk background gelap)
-            // Menggunakan Canny dengan range lebar + Dilate untuk menutup garis putus-putus
+            // 2. Edge Detection (Ini adalah "Skeleton" mentah)
             cv.Canny(blur, edges, 20, 80);
+
+            // Dilate agar garis putus-putus nyambung
             let M = cv.Mat.ones(3, 3, cv.CV_8U);
             cv.dilate(edges, edges, M, new cv.Point(-1, -1), 2, cv.BORDER_CONSTANT, cv.morphologyDefaultBorderValue());
+
+            // SIMPAN HASIL SKELETON (EDGES) KE MEMORI GLOBAL
+            processedEdgesMat = edges.clone();
 
             // 3. Find Contours
             cv.findContours(edges, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
@@ -366,92 +453,50 @@
                 let area = cv.contourArea(cnt);
                 let totalArea = src.cols * src.rows;
 
-                // Filter Area: Tidak terlalu kecil, tidak terlalu besar
                 if (area < totalArea * 0.02 || area > totalArea * 0.9) continue;
 
                 let peri = cv.arcLength(cnt, true);
                 let approx = new cv.Mat();
-                // Epsilon 0.03 allow sedikit lengkungan (border radius)
                 cv.approxPolyDP(cnt, approx, 0.03 * peri, true);
 
-                // Validasi Bentuk Geometris
                 if (approx.rows === 4 && cv.isContourConvex(approx)) {
                     let rect = cv.boundingRect(approx);
                     let aspectRatio = rect.width / rect.height;
 
-                    // Filter Rasio Monitor (Landscape umumnya 1.2 - 2.5)
                     if (aspectRatio >= 1.2 && aspectRatio <= 3.0) {
 
-                        // --- TEKNIK ANALISIS BARU: CEK DALAM KOTAK ---
-
-                        // 1. Buat Mask (Topeng) Hitam
+                        // Analisis Dalam Kotak
                         let mask = new cv.Mat.zeros(gray.rows, gray.cols, cv.CV_8UC1);
                         let vector = new cv.MatVector();
                         vector.push_back(approx);
 
-                        // 2. Gambar bentuk monitor putih solid di mask
                         cv.drawContours(mask, vector, 0, [255, 255, 255, 255], -1);
 
-                        // 3. EROSI MASK (Kunci Akurasi):
-                        // Kecilkan area putih sebesar ~15px agar kita HANYA mengecek LAYAR,
-                        // bukan bezel atau background yg ikut masuk.
                         let kernelSize = Math.max(3, Math.floor(Math.min(src.cols, src.rows) * 0.02));
                         let kernel = cv.Mat.ones(kernelSize, kernelSize, cv.CV_8U);
                         cv.erode(mask, mask, kernel);
 
-                        // 4. Hitung Statistik Pixel di dalam area Erosi
                         let meanStdDev = new cv.Mat();
                         let meanStdDev2 = new cv.Mat();
                         cv.meanStdDev(gray, meanStdDev, meanStdDev2, mask);
 
-                        let avgBrightness = meanStdDev.doubleAt(0, 0); // Rata-rata kecerahan
-                        let stdDeviation = meanStdDev2.doubleAt(0, 0); // Variasi kecerahan (Kontras)
-
-                        // --- LOGIKA PENENTUAN STATUS (HEURISTIC) ---
+                        let avgBrightness = meanStdDev.doubleAt(0, 0);
+                        let stdDeviation = meanStdDev2.doubleAt(0, 0);
 
                         let isOn = false;
-                        let reason = "";
+                        if (avgBrightness > 80) isOn = true;
+                        else if (avgBrightness > 15 && stdDeviation > 18) isOn = true;
 
-                        // Kasus 1: Layar Terang (Putih/Website Light Mode)
-                        if (avgBrightness > 80) {
-                            isOn = true;
-                            reason = "Bright";
-                        }
-                        // Kasus 2: Layar Gelap tapi ada konten (Dark Mode / Terminal)
-                        // Monitor mati biasanya avg < 40 dan stdDev rendah (< 10) karena warnanya flat.
-                        // Monitor coding (hitam + text putih) avg rendah tapi stdDev tinggi (> 15-20).
-                        else if (avgBrightness > 15 && stdDeviation > 18) {
-                            isOn = true;
-                            reason = "Contrast";
-                        }
-                        // Sisanya dianggap Mati (Gelap Flat atau Pantulan Halus)
-                        else {
-                            isOn = false;
-                        }
+                        let color = isOn ? [0, 255, 0, 255] : [255, 0, 0, 255];
+                        let label = isOn ? "ON" : "OFF";
+                        if (isOn) monitorCountOn++; else monitorCountOff++;
 
-                        // Update Visual & Data
-                        let color;
-                        let textLabel;
-
-                        if (isOn) {
-                            monitorCountOn++;
-                            color = [0, 255, 0, 255]; // Hijau
-                            textLabel = "ON"; // debug: ${Math.round(avgBrightness)}/${Math.round(stdDeviation)}
-                        } else {
-                            monitorCountOff++;
-                            color = [255, 0, 0, 255]; // Merah
-                            textLabel = "OFF";
-                        }
-
-                        // Gambar Kotak (Tebal)
+                        // Gambar Kotak Tebal di Gambar Utama
                         cv.drawContours(src, vector, 0, color, 4);
-
-                        // Label Background agar terbaca
                         let p1 = new cv.Point(rect.x, rect.y - 10);
-                        // cv.rectangle(src, new cv.Point(rect.x, rect.y - 35), new cv.Point(rect.x + 80, rect.y), [0,0,0,150], -1);
-                        cv.putText(src, textLabel, p1, cv.FONT_HERSHEY_SIMPLEX, 1.0, color, 2);
+                        cv.putText(src, label, p1, cv.FONT_HERSHEY_SIMPLEX, 1.0, color, 2);
 
-                        // Cleanup loop
+                        // Cleanup Loop
                         mask.delete(); vector.delete(); kernel.delete();
                         meanStdDev.delete(); meanStdDev2.delete();
                     }
@@ -459,15 +504,34 @@
                 approx.delete();
             }
 
-            // Tampilkan hasil
+            // SIMPAN HASIL AKHIR (GAMBAR + KOTAK) KE MEMORI GLOBAL
+            processedResultMat = src.clone();
+
+            // Tampilkan hasil default (Normal)
             cv.imshow('outputCanvas', src);
 
+            // Update Stats
             document.getElementById('countOn').innerText = monitorCountOn;
             document.getElementById('countOff').innerText = monitorCountOff;
 
-            // Cleanup Memory (Sangat Penting)
+            // Cleanup Local Memory
             src.delete(); gray.delete(); blur.delete(); edges.delete();
             contours.delete(); hierarchy.delete(); M.delete();
+        }
+
+        // --- Fungsi Toggle View (Skeleton / Normal) ---
+        function toggleView() {
+            if (!processedResultMat || !processedEdgesMat) return;
+
+            const isSkeletonMode = skeletonCheckbox.checked;
+
+            if (isSkeletonMode) {
+                // Tampilkan Skeleton (Edges)
+                cv.imshow('outputCanvas', processedEdgesMat);
+            } else {
+                // Tampilkan Hasil Scan Normal
+                cv.imshow('outputCanvas', processedResultMat);
+            }
         }
     </script>
 </body>
