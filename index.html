@@ -3,454 +3,304 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Live Monitor Detector AI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady()"
-        type="text/javascript"></script>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detektor Monitor (DIP)</title>
     <style>
         :root {
-            --primary: #6366f1;
-            --success: #22c55e;
-            /* Hijau Monitor Nyala */
-            --danger: #ef4444;
-            /* Merah Monitor Mati */
-            --bg: #0f172a;
+            --primary: #007bff;
+            --bg: #f4f4f9;
+            --text: #333;
         }
 
         body {
-            margin: 0;
-            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg);
-            font-family: 'Inter', sans-serif;
-            color: white;
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            /* Mencegah scroll saat fullscreen */
         }
 
-        /* Container Kamera & Canvas */
-        .camera-container {
-            position: relative;
+        h1 {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .container {
             width: 100%;
-            max-width: 800px;
-            /* Batas lebar di desktop */
-            height: auto;
-            aspect-ratio: 9/16;
-            /* Default mobile aspect */
-            background: black;
-            overflow: hidden;
-            border-radius: 0 0 16px 16px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        }
-
-        /* Responsif untuk Desktop */
-        @media (min-width: 768px) {
-            .camera-container {
-                aspect-ratio: 16/9;
-                margin-top: 20px;
-                border-radius: 16px;
-            }
-        }
-
-        /* Video dan Canvas bertumpuk (Overlay) */
-        video,
-        canvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            /* Memastikan layar penuh */
-        }
-
-        /* UI Overlay di atas video */
-        .hud-overlay {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            justify-content: space-between;
-            pointer-events: none;
-            /* Agar klik tembus ke bawah */
-            z-index: 10;
-        }
-
-        .badge {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(4px);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .bg-green {
-            background: var(--success);
-            box-shadow: 0 0 8px var(--success);
-        }
-
-        .bg-red {
-            background: var(--danger);
-            box-shadow: 0 0 8px var(--danger);
-        }
-
-        .loader-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 20;
-            transition: opacity 0.5s;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #333;
-            border-top: 4px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .controls {
-            padding: 20px;
-            width: 100%;
-            max-width: 800px;
             display: flex;
-            justify-content: center;
-            gap: 15px;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
         }
 
-        button {
-            background: var(--primary);
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            background-color: var(--primary);
             color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1rem;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            padding: 12px;
+            text-align: center;
+            border-radius: 8px;
             cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+
+        .status-box {
+            margin-top: 15px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .result-stats {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            justify-content: space-around;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .stat-on {
+            color: #28a745;
+        }
+
+        .stat-off {
+            color: #dc3545;
+        }
+
+        canvas {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+        }
+
+        #loading {
+            color: var(--primary);
+            font-weight: bold;
+            display: block;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            .container {
+                padding: 15px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Loading Screen -->
-    <div id="loader" class="loader-container">
-        <div class="spinner"></div>
-        <p style="margin-top:15px; color:#94a3b8;">Memuat AI Engine...</p>
-    </div>
+    <div class="container">
+        <h1>Detektor Status Monitor (Non-AI)</h1>
 
-    <!-- Main Camera View -->
-    <div class="camera-container">
-        <video id="videoElement" playsinline autoplay muted></video>
-        <!-- Canvas Transparan untuk menggambar kotak -->
-        <canvas id="outputCanvas"></canvas>
+        <div id="loading">Memuat Library OpenCV.js... (Mohon Tunggu)</div>
 
-        <!-- HUD Statistik -->
-        <div class="hud-overlay">
-            <div class="badge">
-                <div class="dot bg-green"></div>
-                <span id="statOn">ON: 0</span>
-            </div>
-            <div class="badge">
-                <div class="dot bg-red"></div>
-                <span id="statOff">OFF: 0</span>
+        <div class="controls">
+            <!-- Input Camera Environment untuk kamera belakang HP -->
+            <label for="fileInput" class="btn">
+                📷 Ambil / Upload Foto
+            </label>
+            <input type="file" id="fileInput" accept="image/*" capture="environment">
+        </div>
+
+        <div class="status-box">
+            <div id="statusText">Siap memproses gambar.</div>
+            <div class="result-stats" id="stats" style="display:none;">
+                <span class="stat-on">Menyala: <span id="countOn">0</span></span>
+                <span class="stat-off">Mati: <span id="countOff">0</span></span>
             </div>
         </div>
+
+        <!-- Canvas untuk hasil output -->
+        <canvas id="canvasOutput"></canvas>
+        <!-- Image source hidden -->
+        <img id="imageSrc" alt="No Image" style="display:none;" />
     </div>
 
-    <div class="controls">
-        <button onclick="switchCamera()">🔄 Putar Kamera</button>
-    </div>
+    <!-- Load OpenCV.js -->
+    <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady();"
+        type="text/javascript"></script>
 
-    <script>
-        let video = document.getElementById('videoElement');
-        let canvas = document.getElementById('outputCanvas');
-        let ctx = canvas.getContext('2d');
-
-        let stream = null;
-        let isCvReady = false;
-        let isProcessing = false;
-        let facingMode = 'environment'; // Default kamera belakang
-
-        // Variabel untuk Memory Management OpenCV
-        let srcMat, grayMat, claheMat, blurMat, edgesMat;
-        let claheObj;
-        let contours, hierarchy;
+    <script type="text/javascript">
+        let cvReady = false;
 
         function onOpenCvReady() {
-            console.log('OpenCV Ready');
-            isCvReady = true;
-            document.getElementById('loader').style.display = 'none';
-            startCamera();
+            cvReady = true;
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('statusText').innerText = "OpenCV Siap. Silakan upload foto.";
         }
 
-        async function startCamera() {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
+        const fileInput = document.getElementById('fileInput');
+        const imageSrc = document.getElementById('imageSrc');
+        const canvasOutput = document.getElementById('canvasOutput');
+        const statusText = document.getElementById('statusText');
+        const statsDiv = document.getElementById('stats');
+        const countOnSpan = document.getElementById('countOn');
+        const countOffSpan = document.getElementById('countOff');
 
-            try {
-                // Konfigurasi resolusi. Gunakan HD agar deteksi detail bagus tapi tidak terlalu berat.
-                const constraints = {
-                    video: {
-                        facingMode: facingMode,
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    }
-                };
-                stream = await navigator.mediaDevices.getUserMedia(constraints);
-                video.srcObject = stream;
-
-                video.onloadedmetadata = () => {
-                    video.play();
-                    // Sesuaikan ukuran canvas dengan ukuran render video
-                    adjustCanvasSize();
-                    // Mulai Loop Deteksi
-                    requestAnimationFrame(processVideo);
-                };
-            } catch (err) {
-                alert("Gagal mengakses kamera: " + err);
-            }
-        }
-
-        function switchCamera() {
-            facingMode = facingMode === 'user' ? 'environment' : 'user';
-            startCamera();
-        }
-
-        function adjustCanvasSize() {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-        }
-
-        // Variabel Throttling (Agar tidak lag)
-        let lastProcessTime = 0;
-        const PROCESS_DELAY = 150; // Deteksi dijalankan setiap 150ms (sekitar 6-7 FPS)
-
-        function processVideo(timestamp) {
-            if (!isCvReady || video.paused || video.ended) {
-                requestAnimationFrame(processVideo);
+        fileInput.addEventListener('change', (e) => {
+            if (!cvReady) {
+                alert("OpenCV belum siap, tunggu sebentar.");
                 return;
             }
+            if (e.target.files.length === 0) return;
 
-            // Bersihkan canvas setiap frame agar kotak lama hilang
-            // Kita bersihkan canvas UI, tapi deteksi AI pakai interval
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            statusText.innerText = "Memproses gambar...";
+            imageSrc.src = URL.createObjectURL(e.target.files[0]);
+        });
 
-            // Cek apakah sudah waktunya memproses frame (Throttling)
-            if (timestamp - lastProcessTime > PROCESS_DELAY) {
-                detectMonitors();
-                lastProcessTime = timestamp;
-            } else {
-                // Jika belum waktunya deteksi baru, gambar ulang hasil terakhir (agar kotak tidak kedip-kedip)
-                drawLastResults();
-            }
+        imageSrc.onload = function () {
+            processImage();
+        };
 
-            requestAnimationFrame(processVideo);
-        }
-
-        // Menyimpan hasil deteksi terakhir untuk digambar di frame sela
-        let detectedMonitors = [];
-
-        function detectMonitors() {
+        function processImage() {
             try {
-                // Inisialisasi Matriks (Hanya sekali atau jika ukuran berubah)
-                if (!srcMat) {
-                    srcMat = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC4);
-                    grayMat = new cv.Mat();
-                    claheMat = new cv.Mat();
-                    blurMat = new cv.Mat();
-                    edgesMat = new cv.Mat();
-                    contours = new cv.MatVector();
-                    hierarchy = new cv.Mat();
-                    claheObj = new cv.CLAHE(2.5, new cv.Size(8, 8));
-                }
+                // 1. Persiapan Matriks Gambar
+                let src = cv.imread(imageSrc);
+                let dst = new cv.Mat();
+                let gray = new cv.Mat();
+                let blur = new cv.Mat();
+                let edges = new cv.Mat();
 
-                // 1. Ambil gambar dari video ke OpenCV Mat
-                let cap = new cv.VideoCapture(video);
-                cap.read(srcMat);
+                // 2. Pre-processing: Grayscale & Gaussian Blur (Mengurangi noise)
+                cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY, 0);
+                let ksize = new cv.Size(5, 5);
+                cv.GaussianBlur(gray, blur, ksize, 0, 0, cv.BORDER_DEFAULT);
 
-                // 2. Pre-processing (Grayscale + CLAHE + Blur)
-                cv.cvtColor(srcMat, grayMat, cv.COLOR_RGBA2GRAY);
-                claheObj.apply(grayMat, claheMat); // Tingkatkan kontras (penting utk monitor gelap)
-                cv.GaussianBlur(claheMat, blurMat, new cv.Size(5, 5), 0);
+                // 3. Deteksi Tepi (Canny Edge Detection)
+                // Threshold bisa disesuaikan tergantung kondisi cahaya
+                cv.Canny(blur, edges, 50, 150, 3, false);
 
-                // 3. Deteksi Tepi
-                cv.Canny(blurMat, edgesMat, 25, 80);
+                // 4. Mencari Kontur (Bentuk tertutup)
+                let contours = new cv.MatVector();
+                let hierarchy = new cv.Mat();
+                cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
-                // 4. Dilasi (Sambungkan garis putus)
-                let kernel = cv.Mat.ones(3, 3, cv.CV_8U);
-                cv.dilate(edgesMat, edgesMat, kernel, new cv.Point(-1, -1), 2);
-                kernel.delete();
+                let monitorCountOn = 0;
+                let monitorCountOff = 0;
 
-                // 5. Cari Kontur
-                cv.findContours(edgesMat, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
-                // Reset hasil deteksi
-                detectedMonitors = [];
-                let onCount = 0;
-                let offCount = 0;
+                // Salin gambar asli ke dst untuk digambar hasil akhirnya
+                src.copyTo(dst);
 
                 for (let i = 0; i < contours.size(); ++i) {
                     let cnt = contours.get(i);
+
+                    // 5. Filter Kontur: Luas Area
+                    // Abaikan yang terlalu kecil (noise) atau terlalu besar (background)
                     let area = cv.contourArea(cnt);
+                    let imageArea = src.cols * src.rows;
 
-                    // Filter Ukuran (Tampilkan monitor yang terlihat agak jelas saja)
-                    if (area < 1000) continue;
+                    // Contoh: Monitor minimal 1% dari total foto, max 90%
+                    if (area < (imageArea * 0.01) || area > (imageArea * 0.9)) {
+                        continue;
+                    }
 
-                    let rect = cv.boundingRect(cnt);
-                    let aspectRatio = rect.width / rect.height;
+                    // 6. Aproksimasi Poligon (Mengatasi border radius/sudut tumpul)
+                    let peri = cv.arcLength(cnt, true);
+                    let approx = new cv.Mat();
+                    // Epsilon 0.02-0.04 biasanya bagus untuk menyederhanakan bentuk menjadi segiempat
+                    cv.approxPolyDP(cnt, approx, 0.02 * peri, true);
 
-                    // Filter Bentuk (Asumsi Monitor)
-                    if (aspectRatio > 1.1 && aspectRatio < 4.0) {
+                    // Kita mencari objek yang memiliki 4 sudut (segiempat)
+                    // Karena ada border radius, kadang terdeteksi 5-8 titik, jadi kita beri toleransi
+                    if (approx.rows >= 4 && approx.rows <= 8) {
 
-                        // Soliditas (Cek apakah bentuknya padat/cembung)
-                        let hull = new cv.Mat();
-                        cv.convexHull(cnt, hull);
-                        let hullArea = cv.contourArea(hull);
-                        let solidity = area / hullArea;
-                        hull.delete();
+                        // Buat Bounding Rect untuk analisis ROI (Region of Interest)
+                        let rect = cv.boundingRect(approx);
+                        let aspectRatio = rect.width / rect.height;
 
-                        if (solidity > 0.85) {
-                            // --- ANALISIS STATUS ---
-                            // Crop bagian tengah (hindari bezel)
-                            let marginX = Math.floor(rect.width * 0.25);
-                            let marginY = Math.floor(rect.height * 0.25);
+                        // Filter Rasio Aspek Monitor (Biasanya Landscape: > 1.0)
+                        // Monitor standar 16:9 (1.77) atau 4:3 (1.33)
+                        // Kita beri rentang longgar 0.8 sampai 2.5
+                        if (aspectRatio >= 0.8 && aspectRatio <= 2.5) {
 
-                            if (rect.width > 2.5 * marginX) {
-                                // Buat ROI (Region of Interest)
-                                let roiRect = new cv.Rect(
-                                    rect.x + marginX, rect.y + marginY,
-                                    rect.width - (2 * marginX), rect.height - (2 * marginY)
-                                );
-                                let roi = srcMat.roi(roiRect);
+                            // 7. Analisis ON/OFF Berdasarkan Kecerahan (Luminance)
+                            // Ambil potongan gambar di area kotak tersebut
+                            let roi = gray.roi(rect);
+                            let mean = cv.mean(roi); // Rata-rata kecerahan piksel (0-255)
 
-                                // A. Cek Tekstur (Laplacian Variance) -> Deteksi Glare
-                                let grayRoi = new cv.Mat();
-                                cv.cvtColor(roi, grayRoi, cv.COLOR_RGBA2GRAY);
-                                let laplacian = new cv.Mat();
-                                cv.Laplacian(grayRoi, laplacian, cv.CV_64F);
-                                let meanStdDev = new cv.Mat();
-                                let stdDev = new cv.Mat();
-                                cv.meanStdDev(laplacian, meanStdDev, stdDev);
-                                let textureScore = Math.pow(stdDev.data64F[0], 2);
+                            // Logika Thresholding Sederhana:
+                            // Jika rata-rata kecerahan > Threshold, kemungkinan NYALA.
+                            // Jika kurang, kemungkinan MATI.
+                            // Monitor mati yang memantulkan cahaya biasanya masih lebih gelap rata-ratanya 
+                            // dibanding monitor yang memancarkan cahaya putih/berwarna.
+                            let brightnessThreshold = 70; // Bisa disesuaikan
 
-                                // B. Cek Brightness (HSV Value)
-                                let hsvRoi = new cv.Mat();
-                                cv.cvtColor(roi, hsvRoi, cv.COLOR_RGBA2RGB); // OpenCV.js RGBA source
-                                cv.cvtColor(hsvRoi, hsvRoi, cv.COLOR_RGB2HSV);
-                                let meanHsv = cv.mean(hsvRoi);
-                                let brightness = meanHsv[2];
+                            let color;
+                            let label;
 
-                                // LOGIKA KEPUTUSAN
-                                let status = "OFF";
-
-                                // Rule 1: Texture tinggi = Pasti ON (ada tulisan/gambar)
-                                if (textureScore > 120) {
-                                    status = "ON";
-                                }
-                                // Rule 2: Brightness tinggi tapi tekstur sangat rendah = Glare (OFF)
-                                else if (brightness > 80 && textureScore < 60) {
-                                    status = "OFF";
-                                }
-                                // Rule 3: Brightness lumayan dan ada tekstur sedikit
-                                else if (brightness > 60 && textureScore > 40) {
-                                    status = "ON";
-                                }
-
-                                if (status === "ON") onCount++; else offCount++;
-
-                                // Simpan data untuk digambar
-                                detectedMonitors.push({
-                                    x: rect.x, y: rect.y, w: rect.width, h: rect.height,
-                                    status: status,
-                                    score: `T:${Math.round(textureScore)} B:${Math.round(brightness)}`
-                                });
-
-                                // Cleanup Loop
-                                roi.delete(); grayRoi.delete(); laplacian.delete();
-                                meanStdDev.delete(); stdDev.delete(); hsvRoi.delete();
+                            if (mean[0] > brightnessThreshold) {
+                                monitorCountOn++;
+                                color = new cv.Scalar(0, 255, 0, 255); // Hijau (RGBA)
+                                label = "ON";
+                            } else {
+                                monitorCountOff++;
+                                color = new cv.Scalar(255, 0, 0, 255); // Merah (RGBA)
+                                label = "OFF";
                             }
+
+                            // 8. Menggambar Hasil di Gambar
+                            let p1 = new cv.Point(rect.x, rect.y);
+                            let p2 = new cv.Point(rect.x + rect.width, rect.y + rect.height);
+
+                            // Gambar kotak
+                            cv.rectangle(dst, p1, p2, color, 3, cv.LINE_AA, 0);
+
+                            // Tulis Label
+                            cv.putText(dst, label + " (" + Math.round(mean[0]) + ")", new cv.Point(rect.x, rect.y - 10), cv.FONT_HERSHEY_SIMPLEX, 0.8, color, 2);
+
+                            // Bersihkan memori ROI
+                            roi.delete();
                         }
                     }
+                    approx.delete();
                 }
 
-                // Update UI Statistik
-                document.getElementById('statOn').innerText = `ON: ${onCount}`;
-                document.getElementById('statOff').innerText = `OFF: ${offCount}`;
+                // Tampilkan hasil ke Canvas
+                cv.imshow('canvasOutput', dst);
+
+                // Update Statistik UI
+                statusText.innerText = "Selesai!";
+                statsDiv.style.display = 'flex';
+                countOnSpan.innerText = monitorCountOn;
+                countOffSpan.innerText = monitorCountOff;
+
+                // Bersihkan Memori OpenCV (Wajib agar browser tidak crash)
+                src.delete(); dst.delete(); gray.delete(); blur.delete();
+                edges.delete(); contours.delete(); hierarchy.delete();
 
             } catch (err) {
                 console.error(err);
+                statusText.innerText = "Terjadi kesalahan saat memproses.";
             }
-        }
-
-        // Fungsi menggambar kotak di atas video (HTML5 Canvas API)
-        function drawLastResults() {
-            // Font setting
-            ctx.font = "bold 16px Inter";
-            ctx.lineWidth = 3;
-
-            detectedMonitors.forEach(monitor => {
-                let color = monitor.status === "ON" ? "#22c55e" : "#ef4444"; // Hijau / Merah
-
-                // 1. Gambar Kotak
-                ctx.strokeStyle = color;
-                ctx.beginPath();
-                // Membuat sudut rounded sedikit (opsional)
-                ctx.roundRect(monitor.x, monitor.y, monitor.w, monitor.h, 8);
-                ctx.stroke();
-
-                // 2. Background Label
-                ctx.fillStyle = color;
-                let text = monitor.status; // + " " + monitor.score; (Aktifkan score jika ingin debug)
-                let textWidth = ctx.measureText(text).width;
-
-                ctx.fillRect(monitor.x, monitor.y - 25, textWidth + 20, 25);
-
-                // 3. Teks Label
-                ctx.fillStyle = "white";
-                ctx.fillText(text, monitor.x + 10, monitor.y - 7);
-            });
         }
     </script>
 </body>
