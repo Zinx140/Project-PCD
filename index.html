@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monitor Detector V6.1 (Responsive)</title>
+    <title>Monitor Detector V6.2 (Touch Fix)</title>
     <link
         href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap"
         rel="stylesheet">
@@ -23,6 +23,7 @@
 
         * {
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -31,7 +32,6 @@
             color: var(--text-main);
             margin: 0;
             padding: 15px;
-            /* Padding body lebih kecil di HP */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -46,20 +46,17 @@
             gap: 20px;
         }
 
-        /* --- HEADER SECTION (Responsive) --- */
+        /* HEADER */
         .header-section {
             display: flex;
             flex-direction: column;
-            /* Default HP: Stack Vertical */
             gap: 15px;
             background: var(--bg-card);
             padding: 20px;
             border-radius: 16px;
             border: 1px solid var(--border);
-            position: relative;
         }
 
-        /* Tablet ke atas: Row horizontal */
         @media (min-width: 768px) {
             .header-section {
                 flex-direction: row;
@@ -74,7 +71,6 @@
         .title-group h1 {
             margin: 0;
             font-size: 1.5rem;
-            /* Font lebih kecil di HP */
             line-height: 1.2;
         }
 
@@ -90,11 +86,10 @@
             }
         }
 
-        /* --- STATS BOX --- */
+        /* STATS BOX */
         .stats-box {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            /* HP: Grid 2 kolom sama besar */
             gap: 10px;
             width: 100%;
         }
@@ -113,9 +108,6 @@
             padding: 12px;
             border-radius: 12px;
             text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
         }
 
         .stat-val {
@@ -128,9 +120,8 @@
         .stat-label {
             font-size: 0.7rem;
             color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
             margin-top: 5px;
+            display: block;
         }
 
         .text-green {
@@ -141,7 +132,7 @@
             color: var(--danger);
         }
 
-        /* --- MODE SELECTOR --- */
+        /* MODE SELECTOR */
         .mode-selector {
             display: flex;
             background: var(--bg-card);
@@ -159,10 +150,8 @@
             cursor: pointer;
             font-weight: 600;
             border-radius: 8px;
-            transition: 0.3s;
             font-size: 0.9rem;
             display: flex;
-            align-items: center;
             justify-content: center;
             gap: 8px;
         }
@@ -170,23 +159,19 @@
         .mode-btn.active {
             background: var(--primary);
             color: white;
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
         }
 
-        /* --- WORKSPACE (Main Grid) --- */
+        /* WORKSPACE */
         .workspace {
             display: flex;
             flex-direction: column;
-            /* HP: Stack Vertical */
             gap: 20px;
         }
 
-        /* Desktop: Kiri Gambar, Kanan Kontrol */
         @media (min-width: 1024px) {
             .workspace {
                 display: grid;
                 grid-template-columns: 3fr 1fr;
-                /* Gambar lebih lebar */
                 gap: 25px;
             }
         }
@@ -201,25 +186,14 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
         }
 
-        /* --- RESPONSIVE VIDEO/CANVAS --- */
         video,
         canvas {
             max-width: 100%;
             height: auto;
             border-radius: 8px;
-            /* Pastikan tidak overflow */
             object-fit: contain;
-        }
-
-        /* Khusus Camera UI agar rapi */
-        #cameraUI {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
 
         .upload-btn {
@@ -229,16 +203,10 @@
             cursor: pointer;
             text-align: center;
             width: 100%;
-            transition: 0.3s;
             background: rgba(255, 255, 255, 0.02);
         }
 
-        .upload-btn:hover {
-            border-color: var(--primary);
-            background: rgba(59, 130, 246, 0.1);
-        }
-
-        /* --- CONTROLS PANEL --- */
+        /* --- CONTROLS PANEL & FIXED SLIDERS --- */
         .controls-panel {
             background: var(--bg-card);
             border: 1px solid var(--border);
@@ -252,11 +220,10 @@
         }
 
         .control-group h4 {
-            margin: 0 0 12px 0;
+            margin: 0 0 15px 0;
             color: var(--primary);
             font-size: 0.85rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
         label {
@@ -265,51 +232,85 @@
             font-size: 0.85rem;
             font-weight: 600;
             color: var(--text-muted);
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
+        /* --- NEW SLIDER CSS FOR MOBILE --- */
         input[type=range] {
+            -webkit-appearance: none;
+            /* Hapus style bawaan browser */
+            appearance: none;
             width: 100%;
+            height: 40px;
+            /* Area sentuh tak terlihat diperbesar */
+            background: transparent;
             cursor: pointer;
-            height: 6px;
+            margin: 0;
+            touch-action: pan-y;
+            /* Prioritaskan geser, bukan scroll halaman */
+        }
+
+        /* Garis Slider (Track) */
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            /* Tebal garis */
             background: #334155;
             border-radius: 5px;
-            appearance: none;
+            border: none;
         }
 
+        input[type=range]::-moz-range-track {
+            width: 100%;
+            height: 8px;
+            background: #334155;
+            border-radius: 5px;
+        }
+
+        /* Bulatan Slider (Thumb) - Diperbesar */
         input[type=range]::-webkit-slider-thumb {
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            background: var(--primary);
+            -webkit-appearance: none;
+            height: 28px;
+            /* Ukuran besar agar mudah disentuh */
+            width: 28px;
             border-radius: 50%;
-            cursor: pointer;
+            background: var(--primary);
+            margin-top: -10px;
+            /* Posisi di tengah track: (8/2) - (28/2) = 4 - 14 = -10 */
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+            border: 2px solid #fff;
+            /* Border putih agar kontras */
         }
 
+        input[type=range]::-moz-range-thumb {
+            height: 28px;
+            width: 28px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        /* --- BUTTONS --- */
         .action-btn {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 14px;
-            border-radius: 8px;
+            padding: 16px;
+            border-radius: 12px;
             width: 100%;
             font-weight: bold;
-            cursor: pointer;
             font-size: 1rem;
+            cursor: pointer;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-            transition: 0.2s;
+            margin-top: 10px;
         }
 
-        .action-btn:active {
-            transform: scale(0.98);
-        }
-
-        /* Badge Status Floating (Toast Style) */
+        /* STATUS BADGE */
         #sysStatus {
             position: fixed;
             bottom: 20px;
             right: 20px;
-            /* Pindah ke pojok kanan Bawah agar tidak nutup Header */
             background: #1e293b;
             color: #fff;
             padding: 10px 16px;
@@ -317,20 +318,18 @@
             font-size: 0.8rem;
             font-weight: bold;
             z-index: 1000;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
             border: 1px solid var(--border);
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        /* Indikator dot */
         .status-dot {
             width: 8px;
             height: 8px;
             background: #fbbf24;
             border-radius: 50%;
-            display: inline-block;
             animation: pulse 2s infinite;
         }
 
@@ -348,24 +347,22 @@
             }
         }
 
-        /* Debug Thumb */
         .debug-thumb {
             width: 100%;
-            height: 50px;
-            background: #000;
+            height: 60px;
+            background: black;
             border-radius: 6px;
             border: 1px solid #334155;
-            object-fit: contain;
+            margin-top: 5px;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- Status Badge (Fixed Bottom Right) -->
     <div id="sysStatus">
         <span class="status-dot" id="statusDot"></span>
-        <span id="statusText">Loading System...</span>
+        <span id="statusText">Loading...</span>
     </div>
 
     <div class="container">
@@ -373,96 +370,74 @@
         <div class="header-section">
             <div class="title-group">
                 <h1>Monitor Detector</h1>
-                <p>Digital Image Processing (DIP Logic)</p>
+                <p>Digital Image Processing (DIP)</p>
             </div>
-
             <div class="stats-box">
                 <div class="stat-card" style="border-bottom: 3px solid var(--success);">
-                    <span class="stat-val text-green" id="statOn">0</span>
-                    <span class="stat-label">NYALA (ON)</span>
+                    <span class="stat-val text-green" id="statOn">0</span> <span class="stat-label">NYALA</span>
                 </div>
                 <div class="stat-card" style="border-bottom: 3px solid var(--danger);">
-                    <span class="stat-val text-red" id="statOff">0</span>
-                    <span class="stat-label">MATI (OFF)</span>
+                    <span class="stat-val text-red" id="statOff">0</span> <span class="stat-label">MATI</span>
                 </div>
             </div>
         </div>
 
-        <!-- MODE SELECTOR -->
+        <!-- MODE -->
         <div class="mode-selector">
-            <button class="mode-btn active" onclick="setMode('file')">
-                <span>📁</span> Upload File
-            </button>
-            <button class="mode-btn" onclick="setMode('camera')">
-                <span>📷</span> Kamera (1:1)
-            </button>
+            <button class="mode-btn active" onclick="setMode('file')">📁 Upload File</button>
+            <button class="mode-btn" onclick="setMode('camera')">📷 Kamera (1:1)</button>
         </div>
 
-        <!-- MAIN WORKSPACE -->
+        <!-- WORKSPACE -->
         <div class="workspace">
-
-            <!-- LEFT: DISPLAY -->
+            <!-- DISPLAY -->
             <div class="display-card">
-
-                <!-- FILE MODE UI -->
                 <div id="fileUI" style="width: 100%;">
                     <div class="upload-btn" onclick="document.getElementById('fileInput').click()" id="uploadZone">
-                        <div style="font-size: 2.5rem; margin-bottom: 10px; opacity: 0.7;">📤</div>
-                        <div style="font-weight:600;">Pilih Gambar Monitor</div>
-                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">JPG/PNG Only</div>
+                        <div style="font-size: 2.5rem; margin-bottom: 10px;">📤</div>
+                        <b>Pilih Gambar</b>
+                        <div style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">JPG/PNG</div>
                     </div>
                 </div>
 
-                <!-- CAMERA MODE UI -->
-                <div id="cameraUI" style="display:none;">
+                <div id="cameraUI" style="display:none; width: 100%; flex-direction: column; align-items: center;">
                     <video id="videoFeed" autoplay playsinline></video>
-                    <div style="margin-top: 15px; width: 100%;">
-                        <button class="action-btn" onclick="captureCamera()">📸 JEPRET FOTO</button>
-                    </div>
+                    <button class="action-btn" onclick="captureCamera()" style="margin-top:15px;">📸 JEPRET</button>
                 </div>
 
-                <!-- RESULT CANVAS -->
                 <canvas id="canvasOutput" style="display:none; margin-top:0;"></canvas>
-
-                <!-- Hidden Elements -->
                 <input type="file" id="fileInput" accept="image/*" style="display:none;">
                 <img id="imageSrc" style="display:none;" />
             </div>
 
-            <!-- RIGHT: CONTROLS -->
+            <!-- CONTROLS -->
             <div class="controls-panel">
                 <div class="control-group">
                     <h4>1. Filter Ukuran (Area)</h4>
                     <label>Min Size <span id="lblArea">20000</span></label>
                     <input type="range" id="minArea" min="5000" max="100000" value="20000" oninput="processImage()">
-                    <small style="color:var(--text-muted); font-size:0.75rem;">Abaikan keyboard/mouse</small>
                 </div>
 
                 <div class="control-group">
                     <h4>2. Deteksi Bentuk</h4>
                     <label>Threshold Hitam <span id="lblShape">80</span></label>
                     <input type="range" id="shapeThresh" min="10" max="200" value="80" oninput="processImage()">
-                    <div style="margin-top:5px;">
-                        <canvas id="debugBinary" class="debug-thumb"></canvas>
-                        <small style="color:var(--text-muted); font-size:0.7rem;">Preview Mata Komputer</small>
-                    </div>
+                    <canvas id="debugBinary" class="debug-thumb"></canvas>
                 </div>
 
                 <div class="control-group">
-                    <h4>3. Sensitivitas Cahaya</h4>
-                    <label>Limit Layar <span id="lblLight">30</span></label>
+                    <h4>3. Limit Cahaya</h4>
+                    <label>Batas Layar <span id="lblLight">30</span></label>
                     <input type="range" id="lightThresh" min="5" max="150" value="30" oninput="processImage()">
-                    <small style="color:#fbbf24; font-size:0.75rem;">Set rendah untuk layar gelap</small>
                 </div>
 
                 <button class="action-btn" onclick="document.location.reload()"
-                    style="background:var(--bg-main); border:1px solid var(--border); color:var(--text-muted); font-size:0.9rem;">🔄
+                    style="background:var(--bg-main); border:1px solid var(--border); color:var(--text-muted);">🔄
                     Reset</button>
             </div>
         </div>
     </div>
 
-    <!-- SCRIPT (LOGIKA TETAP SAMA) -->
     <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onCvReady()" type="text/javascript"></script>
 
     <script>
@@ -472,7 +447,7 @@
 
         function onCvReady() {
             cvReady = true;
-            document.getElementById('statusText').innerText = "System Ready (DIP Engine)";
+            document.getElementById('statusText').innerText = "System Ready";
             document.getElementById('statusDot').style.background = "#10b981";
             document.getElementById('sysStatus').style.borderColor = "#10b981";
         }
@@ -480,7 +455,7 @@
         function setMode(mode) {
             currentMode = mode;
             document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-            event.currentTarget.classList.add('active'); // Fixed target issue
+            event.target.classList.add('active');
 
             document.getElementById('canvasOutput').style.display = 'none';
             document.getElementById('statOn').innerText = '0';
@@ -506,7 +481,7 @@
                 let video = document.getElementById('videoFeed');
                 video.srcObject = stream;
             } catch (e) {
-                alert("Gagal akses kamera: " + e.message);
+                alert("Error Camera: " + e.message);
             }
         }
 
@@ -526,23 +501,19 @@
             let startY = (video.videoHeight - size) / 2;
 
             let tempCanvas = document.createElement('canvas');
-            tempCanvas.width = size;
-            tempCanvas.height = size;
+            tempCanvas.width = size; tempCanvas.height = size;
             let ctx = tempCanvas.getContext('2d');
             ctx.drawImage(video, startX, startY, size, size, 0, 0, size, size);
 
             let img = document.getElementById('imageSrc');
             img.src = tempCanvas.toDataURL('image/png');
-
             img.onload = () => {
                 document.getElementById('cameraUI').style.display = 'none';
                 stopCamera();
-                let outCanvas = document.getElementById('canvasOutput');
-                outCanvas.style.display = 'block';
-                // Canvas width diatur CSS (100%), tapi atribut width internal harus sesuai gambar
-                outCanvas.width = size;
-                outCanvas.height = size;
-                outCanvas.getContext('2d').drawImage(img, 0, 0);
+                let out = document.getElementById('canvasOutput');
+                out.style.display = 'block';
+                out.width = size; out.height = size;
+                out.getContext('2d').drawImage(img, 0, 0);
                 processImage();
             }
         }
@@ -551,10 +522,8 @@
             if (e.target.files.length === 0) return;
             let img = document.getElementById('imageSrc');
             img.src = URL.createObjectURL(e.target.files[0]);
-
             document.getElementById('uploadZone').style.display = 'none';
             document.getElementById('canvasOutput').style.display = 'block';
-
             img.onload = () => {
                 let cvs = document.getElementById('canvasOutput');
                 cvs.width = img.width; cvs.height = img.height;
@@ -566,7 +535,6 @@
         function processImage() {
             if (!cvReady || !document.getElementById('imageSrc').src) return;
 
-            // UI Update
             document.getElementById('lblArea').innerText = document.getElementById('minArea').value;
             document.getElementById('lblShape').innerText = document.getElementById('shapeThresh').value;
             document.getElementById('lblLight').innerText = document.getElementById('lightThresh').value;
@@ -583,7 +551,6 @@
 
                 cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
                 cv.threshold(gray, binary, thShape, 255, cv.THRESH_BINARY_INV);
-
                 let M = cv.Mat.ones(5, 5, cv.CV_8U);
                 cv.morphologyEx(binary, binary, cv.MORPH_CLOSE, M, new cv.Point(-1, -1), 4);
                 cv.imshow('debugBinary', binary);
@@ -592,7 +559,7 @@
                 let hierarchy = new cv.Mat();
                 cv.findContours(binary, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
-                let countOn = 0; let countOff = 0;
+                let countOn = 0, countOff = 0;
 
                 for (let i = 0; i < contours.size(); ++i) {
                     let cnt = contours.get(i);
@@ -603,32 +570,21 @@
                         let aspectRatio = rect.width / rect.height;
 
                         if (aspectRatio > 1.1 && aspectRatio < 3.0) {
-                            let rectArea = rect.width * rect.height;
-                            let solidity = area / rectArea;
-
+                            let solidity = area / (rect.width * rect.height);
                             if (solidity > 0.45) {
-                                let roiRect = new cv.Rect(
-                                    rect.x + (rect.width * 0.3),
-                                    rect.y + (rect.height * 0.3),
-                                    rect.width * 0.4,
-                                    rect.height * 0.4
-                                );
+                                let roiRect = new cv.Rect(rect.x + (rect.width * 0.3), rect.y + (rect.height * 0.3), rect.width * 0.4, rect.height * 0.4);
                                 let roi = gray.roi(roiRect);
-                                let mean = cv.mean(roi);
-                                let avg = mean[0];
+                                let avg = cv.mean(roi)[0];
                                 roi.delete();
 
                                 let isON = avg > lightTh;
                                 if (isON) countOn++; else countOff++;
-
                                 let color = isON ? [16, 185, 129, 255] : [239, 68, 68, 255];
                                 let label = isON ? `ON` : `OFF`;
 
-                                cv.rectangle(dst, new cv.Point(rect.x, rect.y), new cv.Point(rect.x + rect.width, rect.y + rect.height), new cv.Scalar(...color), 6);
-
-                                // Label Background
-                                cv.rectangle(dst, new cv.Point(rect.x, rect.y - 40), new cv.Point(rect.x + 100, rect.y), new cv.Scalar(...color), -1);
-                                cv.putText(dst, label, new cv.Point(rect.x + 10, rect.y - 10), cv.FONT_HERSHEY_SIMPLEX, 1.0, new cv.Scalar(255, 255, 255, 255), 2);
+                                cv.rectangle(dst, new cv.Point(rect.x, rect.y), new cv.Point(rect.x + rect.width, rect.y + rect.height), new cv.Scalar(...color), 8);
+                                cv.rectangle(dst, new cv.Point(rect.x, rect.y - 50), new cv.Point(rect.x + 120, rect.y), new cv.Scalar(...color), -1);
+                                cv.putText(dst, label, new cv.Point(rect.x + 10, rect.y - 15), cv.FONT_HERSHEY_SIMPLEX, 1.2, new cv.Scalar(255, 255, 255, 255), 3);
                             }
                         }
                     }
@@ -638,9 +594,7 @@
                 document.getElementById('statOff').innerText = countOff;
                 cv.imshow('canvasOutput', dst);
 
-                src.delete(); dst.delete(); gray.delete(); binary.delete();
-                contours.delete(); hierarchy.delete(); M.delete();
-
+                src.delete(); dst.delete(); gray.delete(); binary.delete(); contours.delete(); hierarchy.delete(); M.delete();
             } catch (err) { console.error(err); }
         }
     </script>
