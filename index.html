@@ -1,574 +1,715 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Monitor Detector V7 (Input Manual & No Lag)</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap"
-        rel="stylesheet">
+    <title>AI Monitor Detector</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg-main: #0f172a;
-            --bg-card: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
-            --success: #10b981;
-            --danger: #ef4444;
-            --border: #334155;
+            /* Color Palette */
+            --bg-body: #0f172a;       /* Dark Blue-Grey */
+            --bg-card: #1e293b;       /* Slate 800 */
+            --bg-card-hover: #334155;
+            
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            
+            --accent-color: #6366f1;  /* Indigo */
+            --accent-hover: #4f46e5;
+            
+            --success-color: #10b981; /* Emerald */
+            --danger-color: #f43f5e;  /* Rose */
+            
+            --border-radius: 16px;
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.15);
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-main);
+            background-color: var(--bg-body);
+            color: var(--text-primary);
             margin: 0;
-            padding: 15px;
+            padding: 0;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
         }
 
+        /* --- Header Section --- */
+        header {
+            width: 100%;
+            padding: 2rem 1rem;
+            text-align: center;
+            background: linear-gradient(180deg, rgba(30,41,59,0.8) 0%, rgba(15,23,42,0) 100%);
+        }
+
+        h1 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.8rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            margin-top: 8px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* --- Container Layout --- */
         .container {
             width: 100%;
-            max-width: 1200px;
+            max-width: 1280px;
+            padding: 0 20px 40px 20px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 24px;
         }
 
-        /* HEADER & STATS */
-        .header-section {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            background: var(--bg-card);
-            padding: 20px;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-        }
-
-        @media (min-width: 768px) {
-            .header-section {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-            }
-        }
-
-        .stats-box {
+        /* --- Stats Cards --- */
+        .stats-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            width: 100%;
-        }
-
-        @media (min-width: 768px) {
-            .stats-box {
-                width: auto;
-                display: flex;
-                gap: 15px;
-            }
+            gap: 16px;
+            margin-bottom: 10px;
         }
 
         .stat-card {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--border);
-            padding: 12px;
-            border-radius: 12px;
+            background-color: var(--bg-card);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
             text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: transform 0.2s;
         }
 
-        .stat-val {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.4rem;
-            font-weight: 700;
-            display: block;
-        }
+        .stat-card:hover { transform: translateY(-2px); }
 
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
         .stat-label {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            margin-top: 5px;
-            display: block;
-            font-weight: bold;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            font-weight: 600;
         }
 
-        .text-green {
-            color: var(--success);
-        }
+        .text-green { color: var(--success-color); text-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
+        .text-red { color: var(--danger-color); text-shadow: 0 0 20px rgba(244, 63, 94, 0.3); }
 
-        .text-red {
-            color: var(--danger);
-        }
-
-        /* MODE SELECTOR */
-        .mode-selector {
+        /* --- Controls --- */
+        .controls-wrapper {
+            background-color: var(--bg-card);
+            padding: 20px;
+            border-radius: var(--border-radius);
             display: flex;
-            background: var(--bg-card);
-            padding: 5px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+            border: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            background-color: rgba(30, 41, 59, 0.9);
         }
 
-        .mode-btn {
-            flex: 1;
-            background: transparent;
-            color: var(--text-muted);
+        .btn {
+            padding: 12px 24px;
             border: none;
-            padding: 12px;
+            border-radius: 12px;
             cursor: pointer;
             font-weight: 600;
-            border-radius: 8px;
-            font-size: 0.9rem;
-        }
-
-        .mode-btn.active {
-            background: var(--primary);
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s ease;
             color: white;
         }
 
-        /* WORKSPACE */
-        .workspace {
-            display: flex;
+        .btn-primary {
+            background-color: var(--accent-color);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        .btn-primary:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
+        .btn-primary:active { transform: scale(0.98); }
+
+        .btn-secondary {
+            background-color: #334155;
+            border: 1px solid #475569;
+        }
+        .btn-secondary:hover { background-color: #475569; }
+
+        input[type="file"] { display: none; }
+
+        /* --- Camera View --- */
+        #camera-section {
+            display: none;
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            background: #000;
+        }
+        video { width: 100%; height: auto; display: block; }
+        
+        .camera-overlay {
+            position: absolute; bottom: 20px; left: 0; right: 0;
+            display: flex; justify-content: center; gap: 20px;
+        }
+
+        #capture-btn {
+            width: 64px; height: 64px;
+            border-radius: 50%;
+            background: white;
+            border: 4px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            position: relative;
+        }
+        #capture-btn::after {
+            content: ''; position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 50px; height: 50px;
+            background: var(--danger-color);
+            border-radius: 50%;
+            transition: transform 0.1s;
+        }
+        #capture-btn:active::after { transform: translate(-50%, -50%) scale(0.9); }
+
+        /* --- Results Grid --- */
+        .results-section {
+            display: none; /* Hidden by default */
             flex-direction: column;
             gap: 20px;
         }
 
-        @media (min-width: 1024px) {
-            .workspace {
-                display: grid;
-                grid-template-columns: 3fr 1fr;
-                gap: 25px;
-            }
+        .grid-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
         }
 
-        .display-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-            min-height: 300px;
+        .result-card {
+            background-color: var(--bg-card);
+            border-radius: var(--border-radius);
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
         }
 
-        .upload-btn {
-            border: 2px dashed var(--border);
-            padding: 30px 15px;
-            border-radius: 12px;
-            cursor: pointer;
-            text-align: center;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        video,
-        canvas {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            object-fit: contain;
-        }
-
-        /* --- NEW CONTROL PANEL STYLE (INPUT + SLIDER) --- */
-        .controls-panel {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-            height: fit-content;
-        }
-
-        .control-group {
-            margin-bottom: 25px;
-            border-bottom: 1px solid #334155;
-            padding-bottom: 15px;
-        }
-
-        .control-group:last-child {
-            border-bottom: none;
-        }
-
-        .control-group h4 {
-            margin: 0 0 10px 0;
-            color: var(--primary);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .input-wrapper {
+        .result-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 8px;
         }
 
-        .input-wrapper label {
-            margin: 0;
-            font-size: 0.85rem;
+        .result-title {
+            font-size: 0.9rem;
             font-weight: 600;
-            color: var(--text-muted);
-        }
-
-        /* Kotak Input Angka */
-        input[type=number] {
-            background: #0f172a;
-            border: 1px solid #475569;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 6px;
-            width: 80px;
-            text-align: right;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: bold;
-        }
-
-        input[type=number]:focus {
-            outline: 2px solid var(--primary);
-            border-color: var(--primary);
-        }
-
-        /* Slider */
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 36px;
-            background: transparent;
-            cursor: pointer;
+            color: var(--accent-color);
             margin: 0;
         }
-
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 6px;
-            background: #334155;
-            border-radius: 5px;
+        
+        .result-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin: 0;
+            margin-top: 4px;
         }
 
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 24px;
-            width: 24px;
-            border-radius: 50%;
-            background: var(--primary);
-            margin-top: -9px;
-            border: 2px solid #fff;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-        }
-
-        .action-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 14px;
-            border-radius: 10px;
+        canvas {
             width: 100%;
-            font-weight: bold;
-            margin-top: 10px;
-            cursor: pointer;
-        }
-
-        /* Debug Preview */
-        .debug-thumb {
-            width: 100%;
-            height: 40px;
-            background: #000;
-            border-radius: 4px;
+            height: auto;
+            border-radius: 8px;
+            background-color: #000;
             border: 1px solid #334155;
-            margin-top: 5px;
+            margin-top: auto; /* Push to bottom if content varies */
         }
 
-        /* Status */
-        #sysStatus {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #1e293b;
-            color: #fff;
-            padding: 10px 16px;
-            border-radius: 50px;
+        /* --- Highlighted Final Result --- */
+        .final-result-card {
+            grid-column: 1 / -1;
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 1px solid var(--accent-color);
+        }
+        .final-result-card .result-title {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+        }
+
+        /* --- Logs Section --- */
+        .logs-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+            margin-top: 10px;
+            /* Scrollbar Styling */
+            scrollbar-width: thin;
+            scrollbar-color: #475569 #1e293b;
+        }
+        
+        .logs-container::-webkit-scrollbar { width: 8px; }
+        .logs-container::-webkit-scrollbar-track { background: #1e293b; }
+        .logs-container::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 4px; }
+
+        .log-entry {
+            background: rgba(0,0,0,0.3);
+            border-left: 4px solid #555;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 0 8px 8px 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+        }
+        .log-entry.status-on { border-left-color: var(--success-color); background: rgba(16, 185, 129, 0.05); }
+        .log-entry.status-off { border-left-color: var(--danger-color); background: rgba(244, 63, 94, 0.05); }
+
+        .log-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
             font-weight: bold;
             font-size: 0.8rem;
-            z-index: 1000;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            border: 1px solid #334155;
+            margin-bottom: 6px;
         }
+        .bg-green { background-color: rgba(16, 185, 129, 0.2); color: var(--success-color); }
+        .bg-red { background-color: rgba(244, 63, 94, 0.2); color: var(--danger-color); }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: #22c55e;
+        /* --- Loading Spinner --- */
+        #loading {
+            position: fixed; inset: 0;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+        .spinner {
+            width: 48px; height: 48px;
+            border: 4px solid #334155;
+            border-bottom-color: var(--accent-color);
             border-radius: 50%;
+            animation: rotation 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 768px) {
+            .controls-wrapper {
+                position: relative; /* Unsticky on mobile */
+                top: 0;
+            }
+            .btn { width: 100%; justify-content: center; } /* Full width buttons */
+            .grid-gallery { grid-template-columns: 1fr; } /* Single column */
+            h1 { font-size: 1.5rem; }
+            .stat-value { font-size: 2rem; }
         }
     </style>
 </head>
-
 <body>
 
-    <div id="sysStatus">
-        <span class="status-dot"></span>
-        <span id="statusText">System Ready</span>
+    <!-- Loading Screen -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <div style="color: var(--text-secondary); font-weight: 500;">Memuat OpenCV System...</div>
     </div>
+
+    <header>
+        <h1>AI Monitor Detector</h1>
+        <p class="subtitle">Deteksi Status Layar (ON/OFF) dengan Computer Vision</p>
+    </header>
 
     <div class="container">
-        <!-- HEADER -->
-        <div class="header-section">
-            <div>
-                <h1 style="margin:0; font-size:1.5rem;">Monitor Detector
-                </h1>
-                <p style="margin:5px 0 0; color:var(--text-muted); font-size:0.85rem;">Pengolahan Citra Digital (PCD)
-                </p>
+        
+        <!-- Stats Widgets -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value text-green" id="count-on">0</span>
+                <span class="stat-label">Menyala (ON)</span>
             </div>
-            <div class="stats-box">
-                <div class="stat-card" style="border-bottom: 2px solid var(--success);">
-                    <span class="stat-val text-green" id="statOn">0</span> <span class="stat-label">NYALA</span>
-                </div>
-                <div class="stat-card" style="border-bottom: 2px solid var(--danger);">
-                    <span class="stat-val text-red" id="statOff">0</span> <span class="stat-label">MATI</span>
-                </div>
+            <div class="stat-card">
+                <span class="stat-value text-red" id="count-off">0</span>
+                <span class="stat-label">Mati (OFF)</span>
             </div>
         </div>
 
-        <!-- MODE -->
-        <div class="mode-selector">
-            <button class="mode-btn active" onclick="setMode('file')">FILE</button>
-            <button class="mode-btn" onclick="setMode('camera')">KAMERA</button>
+        <!-- Control Panel -->
+        <div class="controls-wrapper">
+            <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload Gambar
+            </button>
+            <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+            
+            <button class="btn btn-primary" onclick="startCamera()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                Buka Kamera
+            </button>
         </div>
 
-        <div class="workspace">
-            <!-- DISPLAY -->
-            <div class="display-card">
-                <div id="fileUI" style="width: 100%;">
-                    <div class="upload-btn" onclick="document.getElementById('fileInput').click()" id="uploadZone">
-                        <div style="font-size: 2rem;">📤</div> <br> <b>Pilih Gambar</b>
+        <!-- Live Camera UI -->
+        <div id="camera-section">
+            <video id="videoElement" autoplay playsinline></video>
+            <div class="camera-overlay">
+                <button id="capture-btn" onclick="captureImage()" title="Ambil Foto"></button>
+            </div>
+        </div>
+
+        <!-- Main Results Area -->
+        <div class="results-section" id="output-area">
+            
+            <div class="grid-gallery">
+                <!-- 1. Original -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <div>
+                            <h3 class="result-title">1. Input Original</h3>
+                            <p class="result-desc">Gambar sumber asli</p>
+                        </div>
                     </div>
+                    <canvas id="canvasInput"></canvas>
                 </div>
-                <div id="cameraUI" style="display:none; width: 100%; flex-direction: column; align-items: center;">
-                    <video id="videoFeed" autoplay playsinline></video>
-                    <button class="action-btn" onclick="captureCamera()">FOTO</button>
+
+                <!-- 2. Grayscale -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <div>
+                            <h3 class="result-title">2. Grayscale</h3>
+                            <p class="result-desc"><code>cv.cvtColor(BGR2GRAY)</code></p>
+                        </div>
+                    </div>
+                    <canvas id="canvasGray"></canvas>
                 </div>
-                <canvas id="canvasOutput" style="display:none;"></canvas>
-                <input type="file" id="fileInput" accept="image/*" style="display:none;">
-                <img id="imageSrc" style="display:none;" />
+
+                <!-- 3. Blur -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <div>
+                            <h3 class="result-title">3. Gaussian Blur</h3>
+                            <p class="result-desc">Filter (7,7) reduksi noise</p>
+                        </div>
+                    </div>
+                    <canvas id="canvasBlur"></canvas>
+                </div>
+
+                <!-- 4. Threshold -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <div>
+                            <h3 class="result-title">4. Threshold (Inv)</h3>
+                            <p class="result-desc">Segmentasi biner (38, 255)</p>
+                        </div>
+                    </div>
+                    <canvas id="canvasThresh"></canvas>
+                </div>
+
+                <!-- 5. Contours -->
+                <div class="result-card">
+                    <div class="result-header">
+                        <div>
+                            <h3 class="result-title">5. Contours Check</h3>
+                            <p class="result-desc">Visualisasi kontur (Hijau)</p>
+                        </div>
+                    </div>
+                    <canvas id="canvasContours"></canvas>
+                </div>
             </div>
 
-            <!-- CONTROLS DENGAN INPUT ANGKA -->
-            <div class="controls-panel">
-
-                <!-- 1. AREA FILTER -->
-                <div class="control-group">
-                    <h4>1. Filter Ukuran (Area)</h4>
-                    <div class="input-wrapper">
-                        <label>Min Pixel Area</label>
-                        <!-- Input Angka -->
-                        <input type="number" id="numArea" value="20000" min="1000" max="200000">
+            <!-- 6. Final Result (Full Width) -->
+            <div class="result-card final-result-card">
+                <div class="result-header">
+                    <div>
+                        <h3 class="result-title">6. Hasil Deteksi & Analisis</h3>
+                        <p class="result-desc">Klasifikasi berdasarkan area & kecerahan</p>
                     </div>
-                    <!-- Slider -->
-                    <input type="range" id="rangeArea" min="1000" max="200000" value="20000">
-                    <small style="color:var(--text-muted); font-size:0.75rem;">Besarkan jika keyboard
-                        terdeteksi.</small>
                 </div>
+                <canvas id="canvasOutput"></canvas>
+            </div>
 
-                <!-- 2. SHAPE DETECT -->
-                <div class="control-group">
-                    <h4>2. Threshold Bentuk</h4>
-                    <div class="input-wrapper">
-                        <label>Black Limit</label>
-                        <input type="number" id="numShape" value="80" min="0" max="255">
-                    </div>
-                    <input type="range" id="rangeShape" min="10" max="200" value="80">
-                    <canvas id="debugBinary" class="debug-thumb"></canvas>
-                </div>
-
-                <!-- 3. LIGHT DETECT -->
-                <div class="control-group">
-                    <h4>3. Limit Cahaya (ON/OFF)</h4>
-                    <div class="input-wrapper">
-                        <label>Light Limit</label>
-                        <input type="number" id="numLight" value="30" min="0" max="255">
-                    </div>
-                    <input type="range" id="rangeLight" min="0" max="255" value="30">
-                    <small style="color:#fbbf24; font-size:0.75rem;">Set 20-40 untuk mode gelap.</small>
-                </div>
-
-                <div style="display:flex; gap:10px;">
-                    <button class="action-btn" onclick="processImage()"
-                        style="background:#0f172a; border:1px solid #334155;">⚡ Refresh</button>
-                    <button class="action-btn" onclick="document.location.reload()"
-                        style="background:#0f172a; border:1px solid #334155;">🔄 Reset</button>
+            <!-- 7. Detailed Logs (Full Width) -->
+            <div class="result-card" style="grid-column: 1 / -1;">
+                <h3 class="result-title" style="margin-bottom: 10px;">📋 Log Perhitungan Logika</h3>
+                <div class="logs-container" id="detection-logs">
+                    <!-- Logs injected via JS -->
                 </div>
             </div>
+
         </div>
     </div>
 
-    <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onCvReady()"></script>
+    <!-- OpenCV.js Library -->
+    <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady()" type="text/javascript"></script>
+
     <script>
-        let cvReady = false, stream = null;
+        let isCvLoaded = false;
+        let videoStream = null;
 
-        function onCvReady() {
-            cvReady = true;
-            document.getElementById('statusText').innerText = "OpenCV Ready";
-
-            // SETUP LINKED INPUTS (Slider <-> Number)
-            // Ini agar slider tidak menjalankan proses berat terus menerus
-            setupLinkedControl('rangeArea', 'numArea');
-            setupLinkedControl('rangeShape', 'numShape');
-            setupLinkedControl('rangeLight', 'numLight');
+        function onOpenCvReady() {
+            isCvLoaded = true;
+            document.getElementById('loading').style.display = 'none';
+            console.log('OpenCV.js Loaded');
         }
 
-        function setupLinkedControl(rangeId, numId) {
-            let range = document.getElementById(rangeId);
-            let num = document.getElementById(numId);
+        /* --- INPUT HANDLERS --- */
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
 
-            // 1. SAAT GESER SLIDER: Update angka SAJA (Cepat, tidak ada lag)
-            range.addEventListener('input', () => {
-                num.value = range.value;
-            });
-
-            // 2. SAAT LEPAS SLIDER: Baru jalankan proses berat
-            range.addEventListener('change', () => {
-                processImage();
-            });
-
-            // 3. SAAT KETIK ANGKA: Jalankan proses saat enter/pindah kolom
-            num.addEventListener('change', () => {
-                range.value = num.value; // Sync Slider
-                processImage();          // Jalankan Proses
-            });
-        }
-
-        // Camera Logic
-        function setMode(mode) {
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-            event.target.classList.add('active');
-            let out = document.getElementById('canvasOutput');
-            out.style.display = 'none';
-            document.getElementById('statOn').innerText = '0'; document.getElementById('statOff').innerText = '0';
-
-            if (mode === 'camera') {
-                document.getElementById('fileUI').style.display = 'none';
-                document.getElementById('cameraUI').style.display = 'flex';
-                startCamera();
-            } else {
-                document.getElementById('cameraUI').style.display = 'none';
-                document.getElementById('fileUI').style.display = 'block';
-                document.getElementById('uploadZone').style.display = 'block';
-                stopCamera();
-            }
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    stopCamera();
+                    processImage(img);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
         }
 
         async function startCamera() {
+            const video = document.getElementById('videoElement');
+            const container = document.getElementById('camera-section');
+            document.getElementById('output-area').style.display = 'none';
+            
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                document.getElementById('videoFeed').srcObject = stream;
-            } catch (e) { alert("Camera Error"); }
-        }
-        function stopCamera() { if (stream) stream.getTracks().forEach(t => t.stop()); }
-
-        function captureCamera() {
-            let vid = document.getElementById('videoFeed');
-            if (!vid.srcObject) return;
-            let size = Math.min(vid.videoWidth, vid.videoHeight);
-            let cvs = document.createElement('canvas');
-            cvs.width = size; cvs.height = size;
-            cvs.getContext('2d').drawImage(vid, (vid.videoWidth - size) / 2, (vid.videoHeight - size) / 2, size, size, 0, 0, size, size);
-
-            let img = document.getElementById('imageSrc');
-            img.src = cvs.toDataURL();
-            img.onload = () => {
-                stopCamera(); document.getElementById('cameraUI').style.display = 'none';
-                let out = document.getElementById('canvasOutput');
-                out.style.display = 'block'; out.width = size; out.height = size;
-                out.getContext('2d').drawImage(img, 0, 0);
-                processImage();
+                videoStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' } 
+                });
+                video.srcObject = videoStream;
+                container.style.display = 'block';
+                // Scroll to camera
+                container.scrollIntoView({ behavior: 'smooth' });
+            } catch (err) {
+                alert("Tidak dapat mengakses kamera. Pastikan izin diberikan.");
             }
         }
 
-        document.getElementById('fileInput').addEventListener('change', (e) => {
-            let img = document.getElementById('imageSrc');
-            img.src = URL.createObjectURL(e.target.files[0]);
-            document.getElementById('uploadZone').style.display = 'none';
-            document.getElementById('canvasOutput').style.display = 'block';
-            img.onload = () => {
-                let out = document.getElementById('canvasOutput');
-                out.width = img.width; out.height = img.height;
-                out.getContext('2d').drawImage(img, 0, 0);
-                processImage();
+        function stopCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
+                document.getElementById('camera-section').style.display = 'none';
             }
-        });
+        }
 
-        // CORE LOGIC
-        function processImage() {
-            if (!cvReady || !document.getElementById('imageSrc').src) return;
+        function captureImage() {
+            const video = document.getElementById('videoElement');
+            // Create canvas for capture
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const img = new Image();
+            img.onload = function() {
+                processImage(img);
+                stopCamera();
+            };
+            img.src = canvas.toDataURL('image/jpeg');
+        }
 
-            // Ambil value langsung dari INPUT ANGKA (karena itu master data sekarang)
-            let minArea = parseInt(document.getElementById('numArea').value);
-            let thShape = parseInt(document.getElementById('numShape').value);
-            let thLight = parseInt(document.getElementById('numLight').value);
+        /* --- CORE LOGIC (OPENCV) --- */
+        function processImage(imgElement) {
+            if (!isCvLoaded) {
+                alert("Tunggu sebentar, System sedang memuat...");
+                return;
+            }
 
-            try {
-                let src = cv.imread('imageSrc');
-                let dst = src.clone();
-                let gray = new cv.Mat();
-                let binary = new cv.Mat();
+            // Show Results Area
+            const resultsSection = document.getElementById('output-area');
+            resultsSection.style.display = 'flex';
+            
+            // Clear previous logs
+            const logsContainer = document.getElementById('detection-logs');
+            logsContainer.innerHTML = ''; 
 
-                cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-                cv.threshold(gray, binary, thShape, 255, cv.THRESH_BINARY_INV);
-                let M = cv.Mat.ones(5, 5, cv.CV_8U);
-                cv.morphologyEx(binary, binary, cv.MORPH_CLOSE, M, new cv.Point(-1, -1), 4);
-                cv.imshow('debugBinary', binary);
+            // Initialize Mats
+            let src = cv.imread(imgElement);
+            let dst = new cv.Mat();
+            let gray = new cv.Mat();
+            let blur = new cv.Mat();
+            let thresh = new cv.Mat();
+            let contoursImg = new cv.Mat();
+            let hierarchy = new cv.Mat();
+            let contours = new cv.MatVector();
 
-                let contours = new cv.MatVector();
-                let hierarchy = new cv.Mat();
-                cv.findContours(binary, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+            // 1. Original
+            cv.imshow('canvasInput', src);
 
-                let cOn = 0, cOff = 0;
-                for (let i = 0; i < contours.size(); ++i) {
-                    let cnt = contours.get(i);
-                    let area = cv.contourArea(cnt);
+            // 2. Grayscale
+            cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+            cv.imshow('canvasGray', gray);
 
-                    if (area > minArea) {
-                        let rect = cv.boundingRect(cnt);
-                        let ratio = rect.width / rect.height;
-                        if (ratio > 1.1 && ratio < 3.0 && (area / (rect.width * rect.height)) > 0.45) {
-                            let roi = gray.roi(new cv.Rect(rect.x + rect.width * 0.3, rect.y + rect.height * 0.3, rect.width * 0.4, rect.height * 0.4));
-                            let avg = cv.mean(roi)[0];
-                            roi.delete();
+            // 3. Blur
+            let ksize = new cv.Size(7, 7);
+            cv.GaussianBlur(gray, blur, ksize, 0);
+            cv.imshow('canvasBlur', blur);
 
-                            let isON = avg > thLight;
-                            if (isON) cOn++; else cOff++;
-                            let color = isON ? [16, 185, 129, 255] : [239, 68, 68, 255];
+            // 4. Threshold
+            cv.threshold(blur, thresh, 38, 255, cv.THRESH_BINARY_INV);
+            cv.imshow('canvasThresh', thresh);
 
-                            cv.rectangle(dst, new cv.Point(rect.x, rect.y), new cv.Point(rect.x + rect.width, rect.y + rect.height), new cv.Scalar(...color), 6);
-                            cv.putText(dst, isON ? "ON" : "OFF", new cv.Point(rect.x + 10, rect.y + 40), cv.FONT_HERSHEY_SIMPLEX, 1.5, new cv.Scalar(...color), 4);
+            // 5. Contours
+            cv.findContours(thresh, contours, hierarchy, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE);
+
+            // Visualisasi Contours pada Threshold (Background grayscale converted to RGB)
+            cv.cvtColor(thresh, contoursImg, cv.COLOR_GRAY2RGBA);
+            // Warna Hijau Neon untuk garis
+            let contourColor = new cv.Scalar(0, 255, 0, 255); 
+            cv.drawContours(contoursImg, contours, -1, contourColor, 2);
+            cv.imshow('canvasContours', contoursImg);
+
+            // 6. Logic Analysis
+            src.copyTo(dst);
+            let onCount = 0;
+            let offCount = 0;
+            let monitorFound = false;
+
+            for (let i = 0; i < contours.size(); ++i) {
+                let cnt = contours.get(i);
+                let area = cv.contourArea(cnt);
+
+                // Filter Area > 5500
+                if (area > 5500) {
+                    let rect = cv.boundingRect(cnt);
+                    let x = rect.x, y = rect.y, w = rect.width, h = rect.height;
+
+                    // Filter Landscape (Width > Height)
+                    if (w > h) {
+                        monitorFound = true;
+                        
+                        // ROI Processing
+                        let roiSrc = src.roi(rect);
+                        let roiGray = new cv.Mat();
+                        cv.cvtColor(roiSrc, roiGray, cv.COLOR_RGBA2GRAY);
+
+                        let mean = cv.mean(roiGray);
+                        let meanBrightness = mean[0]; 
+                        let blackThreshold = 70;
+                        
+                        let statusText = "UNKNOWN";
+                        let color; // RGBA Array for OpenCV
+                        let cssClass = "";
+                        let badgeClass = "";
+                        let logicMsg = "";
+
+                        // Decision Logic
+                        if (meanBrightness < blackThreshold) {
+                            statusText = "MATI (OFF)";
+                            color = [244, 63, 94, 255]; // Rose Red
+                            cssClass = "status-off";
+                            badgeClass = "bg-red";
+                            logicMsg = `Brightness <strong>${meanBrightness.toFixed(2)}</strong> < Threshold ${blackThreshold}`;
+                            offCount++;
+                        } else {
+                            statusText = "MENYALA (ON)";
+                            color = [16, 185, 129, 255]; // Emerald Green
+                            cssClass = "status-on";
+                            badgeClass = "bg-green";
+                            logicMsg = `Brightness <strong>${meanBrightness.toFixed(2)}</strong> ≥ Threshold ${blackThreshold}`;
+                            onCount++;
                         }
+
+                        // Draw on Final Image
+                        let p1 = new cv.Point(x, y);
+                        let p2 = new cv.Point(x + w, y + h);
+                        cv.rectangle(dst, p1, p2, color, 3); // Tebal garis 3
+
+                        // Label Text
+                        let label = `${statusText} | Val: ${Math.round(meanBrightness)}`;
+                        let textOrg = new cv.Point(x, y - 10);
+                        cv.putText(dst, label, textOrg, cv.FONT_HERSHEY_SIMPLEX, 0.7, color, 2);
+
+                        // Add Log Entry
+                        let logHtml = `
+                            <div class="log-entry ${cssClass}">
+                                <div class="log-badge ${badgeClass}">${statusText}</div>
+                                <div>Detection #${onCount + offCount}</div>
+                                <div style="margin-top:4px; font-size:0.8rem; color:#94a3b8;">
+                                    📏 Area: ${area} (Valid > 5500)<br>
+                                    📐 Dimensi: ${w}x${h} (Landscape)<br>
+                                    💡 Logika: ${logicMsg}
+                                </div>
+                            </div>
+                        `;
+                        logsContainer.insertAdjacentHTML('beforeend', logHtml);
+
+                        roiSrc.delete(); roiGray.delete();
                     }
                 }
+            }
 
-                document.getElementById('statOn').innerText = cOn;
-                document.getElementById('statOff').innerText = cOff;
-                cv.imshow('canvasOutput', dst);
+            if (!monitorFound) {
+                 logsContainer.innerHTML = `
+                 <div class="log-entry" style="border-left-color: #f59e0b;">
+                    <span style="color:#f59e0b; font-weight:bold;">⚠️ Tidak ada monitor terdeteksi</span><br>
+                    Pastikan gambar cukup terang dan monitor terlihat jelas (Landscape).<br>
+                    Kontur terbesar saat ini tidak memenuhi syarat Area > 5500.
+                 </div>`;
+            }
 
-                src.delete(); dst.delete(); gray.delete(); binary.delete(); contours.delete(); hierarchy.delete(); M.delete();
-            } catch (e) { console.error(e); }
+            // Display Final Result
+            cv.imshow('canvasOutput', dst);
+
+            // Update Header Stats with Animation
+            animateValue("count-on", parseInt(document.getElementById("count-on").innerText), onCount, 500);
+            animateValue("count-off", parseInt(document.getElementById("count-off").innerText), offCount, 500);
+
+            // Scroll to results
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+
+            // Clean Memory
+            src.delete(); dst.delete(); gray.delete(); 
+            blur.delete(); thresh.delete(); hierarchy.delete(); 
+            contours.delete(); contoursImg.delete();
         }
+
+        // Helper: Number Animation
+        function animateValue(id, start, end, duration) {
+            if (start === end) return;
+            let range = end - start;
+            let current = start;
+            let increment = end > start ? 1 : -1;
+            let stepTime = Math.abs(Math.floor(duration / range));
+            let obj = document.getElementById(id);
+            let timer = setInterval(function() {
+                current += increment;
+                obj.innerHTML = current;
+                if (current == end) { clearInterval(timer); }
+            }, stepTime);
+        }
+
     </script>
 </body>
-
 </html>
